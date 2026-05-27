@@ -1,10 +1,17 @@
 <article class="profile-card">
   <img class="avatar large" src="<%= profile.pfpUrl %>" alt="" loading="lazy">
-  <div>
-    <h2><%= profile.displayName %></h2>
-    <p class="muted">@<%= profile.username %><% if (profile.fid) { %> · FID <%= profile.fid %><% } %></p>
-    <% if (profile.bio) { %><p><%= profile.bio %></p><% } %>
-    <p class="muted"><%= profile.followerCountLabel %> followers · <%= profile.followingCountLabel %> following</p>
-    <a href="<%= profile.farcasterUrl %>" target="_blank" rel="noopener noreferrer">Open profile in Farcaster</a>
+  <div class="profile-main">
+    <div class="profile-title-row">
+      <h2><%= profile.displayName %></h2>
+      <% if (profile.fid) { %><span class="pill">FID <%= profile.fid %></span><% } %>
+    </div>
+    <p class="muted handle">@<%= profile.username %></p>
+    <% if (profile.bio) { %><p class="profile-bio"><%= profile.bio %></p><% } %>
+    <div class="profile-stats">
+      <span><strong><%= profile.followerCountLabel %></strong> followers</span>
+      <span><strong><%= profile.followingCountLabel %></strong> following</span>
+    </div>
+    <a class="text-link" href="/u/<%= encodeURIComponent(profile.username) %>">View locally</a>
+    <a class="text-link" href="<%= profile.farcasterUrl %>" target="_blank" rel="noopener noreferrer">Open profile in Farcaster</a>
   </div>
 </article>

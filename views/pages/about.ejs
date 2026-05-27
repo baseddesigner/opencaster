@@ -8,15 +8,18 @@
 </head>
 <body>
   <%- include('../partials/header', { active }) %>
-  <main class="shell prose">
-    <p class="eyebrow">No-build Farcaster client</p>
+  <main class="app-shell single-column prose">
+    <p class="eyebrow">Production-ready Farcaster client</p>
     <h1>Farcaster Lite</h1>
-    <p>A read-only, server-rendered Farcaster browser. No Next.js, no React, no signer flow, no database. Just useful pages backed by server-side Neynar reads.</p>
-    <ul>
-      <li>Feed, profile, cast/thread, and search pages.</li>
-      <li>Provider key stays on the server.</li>
-      <li>Actions open Farcaster directly.</li>
-    </ul>
+    <p>A read-only, server-rendered Farcaster client designed to be useful before any secrets exist. Demo mode is first-class; live Neynar credentials can be plugged in later without rewriting the app.</p>
+    <div class="check-grid">
+      <section><strong>No app-side writes</strong><p>Casts, likes, follows, DMs, payments, auth, and signer custody are intentionally out of scope until explicitly approved.</p></section>
+      <section><strong>Provider boundary</strong><p>Routes speak to app-owned provider methods and stable view models, not raw provider JSON.</p></section>
+      <section><strong>Server-side keys</strong><p>Provider keys never enter browser JavaScript, rendered HTML, diagnostics, or error states.</p></section>
+      <section><strong>Production-shaped UI</strong><p>Feed, search, profile, and thread pages have responsive layouts, empty states, diagnostics, and security headers.</p></section>
+    </div>
+    <p><a class="more" href="/diagnostics">View production diagnostics</a></p>
   </main>
+  <script src="/app.js"></script>
 </body>
 </html>

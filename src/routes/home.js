@@ -17,33 +17,39 @@ async function renderFeed(req, res, next, ctx, feedId) {
     })
   }
 
-  if (!ctx.config.apiKey) {
+  if (!ctx.provider.ready) {
     return res.render('pages/home', {
       title: `${feed.label} feed`,
       active: 'feed',
       feedId,
       feed,
+      rank: 'signal',
       casts: [],
       nextCursor: null,
-      setupMessage: 'Add NEYNAR_API_KEY to .env to load live Farcaster data.',
+      setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.',
       errorMessage: ''
     })
   }
 
   try {
     const cursor = req.query.cursor || ''
-    const cacheKey = `feed:${feedId}:${cursor}`
+    const rank = req.query.rank === 'recent' ? 'recent' : 'signal'
+    const cacheKey = `feed:${ctx.provider.name}:${feedId}:${rank}:${cursor}`
     const payload = await ctx.cache.cached(cacheKey, ctx.config.cacheTtlSeconds * 1000, async () => {
-      if (feed.mode === 'trending') return ctx.neynarClient.fetchTrendingFeed({ limit: 20, cursor })
-      return ctx.neynarClient.fetchFeed({ feedId, query: feed.query, limit: 20, cursor })
+      if (feed.mode === 'trending') return ctx.provider.fetchTrendingFeed({ limit: 20, cursor })
+      return ctx.provider.fetchFeed({ feedId, query: feed.query, limit: 20, cursor })
     })
     const normalized = normalizeFeedResponse(payload)
+    const casts = rank === 'recent'
+      ? [...normalized.casts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      : [...normalized.casts].sort((a, b) => b.engagementScore - a.engagementScore)
     res.render('pages/home', {
       title: `${feed.label} feed`,
       active: 'feed',
       feedId,
       feed,
-      casts: normalized.casts,
+      rank,
+      casts,
       nextCursor: normalized.nextCursor,
       setupMessage: '',
       errorMessage: ''
@@ -54,6 +60,7 @@ async function renderFeed(req, res, next, ctx, feedId) {
       active: 'feed',
       feedId,
       feed,
+      rank: 'signal',
       casts: [],
       nextCursor: null,
       setupMessage: '',

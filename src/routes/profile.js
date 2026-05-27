@@ -6,29 +6,27 @@ function registerProfileRoutes(app, ctx) {
 }
 
 async function renderProfile(req, res, ctx, target) {
-  if (!ctx.config.apiKey) {
+  if (!ctx.provider.ready) {
     return res.render('pages/profile', {
       title: 'Profile setup needed',
       active: 'profile',
       profile: null,
       casts: [],
-      setupMessage: 'Add NEYNAR_API_KEY to .env to load profiles.',
+      setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.',
       errorMessage: ''
     })
   }
   try {
     const raw = target.username
-      ? await ctx.neynarClient.fetchUserByUsername(target.username)
-      : await ctx.neynarClient.fetchUserByFid(target.fid)
+      ? await ctx.provider.fetchUserByUsername(target.username)
+      : await ctx.provider.fetchUserByFid(target.fid)
     const profile = toProfileCard(raw)
     let casts = []
-    if (ctx.neynarClient.fetchFeed) {
-      try {
-        const feed = await ctx.neynarClient.fetchFeed({ fid: profile.fid, limit: 10 })
-        casts = normalizeFeedResponse(feed).casts
-      } catch (_) {
-        casts = []
-      }
+    try {
+      const feed = await ctx.provider.fetchFeed({ fid: profile.fid, query: profile.username, limit: 10 })
+      casts = normalizeFeedResponse(feed).casts
+    } catch (_) {
+      casts = []
     }
     res.render('pages/profile', { title: profile.displayName, active: 'profile', profile, casts, setupMessage: '', errorMessage: '' })
   } catch (err) {

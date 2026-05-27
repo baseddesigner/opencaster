@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Production diagnostics · Farcaster Lite</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <%- include('../partials/header', { active }) %>
+  <main class="app-shell single-column prose">
+    <p class="eyebrow">Production diagnostics</p>
+    <h1>Production diagnostics</h1>
+    <section class="diagnostic-grid">
+      <article><span>Provider</span><strong><%= diagnostics.provider.name %></strong><p><%= diagnostics.provider.ready ? 'Ready' : 'Setup required' %> · <%= diagnostics.provider.mode %></p></article>
+      <article><span>Secrets</span><strong>server-only</strong><p>No provider key is rendered or exposed.</p></article>
+      <article><span>Writes</span><strong>disabled</strong><p>Outbound links only; no signer custody.</p></article>
+      <article><span>Proxy</span><strong>none</strong><p>Explicit routes only; no generic provider proxy.</p></article>
+    </section>
+    <h2>Checklist gates</h2>
+    <ul class="check-list">
+      <% Object.entries(diagnostics.security).forEach(([key, value]) => { %>
+        <li><span><%= value ? '✓' : '•' %></span><%= key %></li>
+      <% }) %>
+    </ul>
+    <h2>Max-gated later</h2>
+    <ul class="check-list muted-list">
+      <% diagnostics.maxGated.forEach((item) => { %><li><span>→</span><%= item %></li><% }) %>
+    </ul>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

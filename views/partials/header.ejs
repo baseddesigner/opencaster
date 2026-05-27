@@ -1,8 +1,17 @@
 <header class="site-header">
-  <a class="brand" href="/">Farcaster Lite</a>
+  <a class="brand" href="/" aria-label="Farcaster Lite home">
+    <span class="brand-mark">fc</span>
+    <span><strong>Farcaster Lite</strong><small>signal client</small></span>
+  </a>
+  <form class="quick-search" action="/search" method="get" role="search">
+    <input name="q" maxlength="120" placeholder="Search casts, users, Base, x402…" aria-label="Search Farcaster">
+    <input type="hidden" name="type" value="casts">
+  </form>
   <nav class="nav" aria-label="Primary">
     <a class="<%= active === 'feed' ? 'active' : '' %>" href="/">Feed</a>
     <a class="<%= active === 'search' ? 'active' : '' %>" href="/search">Search</a>
+    <a class="<%= active === 'diagnostics' ? 'active' : '' %>" href="/diagnostics">Status</a>
     <a class="<%= active === 'about' ? 'active' : '' %>" href="/about">About</a>
   </nav>
+  <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme">◐</button>
 </header>

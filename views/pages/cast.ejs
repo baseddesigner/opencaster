@@ -8,18 +8,26 @@
 </head>
 <body>
   <%- include('../partials/header', { active }) %>
-  <main class="shell">
+  <main class="app-shell thread-shell single-column">
     <% if (setupMessage) { %><%- include('../partials/empty-state', { message: setupMessage }) %><% } %>
     <% if (errorMessage) { %><%- include('../partials/error-state', { message: errorMessage }) %><% } %>
     <% if (cast) { %>
+      <p class="eyebrow">Thread reader</p>
+      <% if (parent) { %>
+        <section class="parent-context" aria-label="Parent context">
+          <div class="section-head"><h2>Parent context</h2><a class="text-link" href="/cast/<%= encodeURIComponent(parent.hash) %>"><%= parent.hash %></a></div>
+          <%- include('../partials/feed-card', { cast: parent }) %>
+        </section>
+      <% } %>
       <%- include('../partials/feed-card', { cast }) %>
       <div class="actions block"><a href="<%= replyUrl %>" target="_blank" rel="noopener noreferrer">Reply in Farcaster</a></div>
-      <h2>Replies</h2>
+      <div class="section-head"><h2>Replies</h2><span class="pill"><%= replies.length %> loaded</span></div>
       <section class="feed-list replies">
         <% replies.forEach((reply) => { %><%- include('../partials/feed-card', { cast: reply }) %><% }) %>
         <% if (!replies.length) { %><%- include('../partials/empty-state', { message: 'No replies loaded.' }) %><% } %>
       </section>
     <% } %>
   </main>
+  <script src="/app.js"></script>
 </body>
 </html>

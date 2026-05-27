@@ -8,37 +8,78 @@
 </head>
 <body>
   <%- include('../partials/header', { active }) %>
-  <main class="shell">
-    <section class="hero">
-      <p class="eyebrow">Read-only · no build step</p>
-      <h1><%= feed.label %></h1>
-      <p><%= feed.description %></p>
-      <div class="feed-tabs">
+  <main class="app-shell feed-shell">
+    <aside class="left-rail" aria-label="Feed presets">
+      <p class="rail-label">Feeds</p>
+      <div class="feed-tabs vertical">
         <% Object.entries(feeds).forEach(([id, item]) => { %>
-          <a class="<%= id === feedId ? 'active' : '' %>" href="/feed/<%= id %>"><%= item.label %></a>
+          <a class="<%= id === feedId ? 'active' : '' %>" href="/feed/<%= id %>"><span><%= item.shortLabel || item.label %></span><small><%= item.accent || item.mode %></small></a>
         <% }) %>
       </div>
-    </section>
+      <div class="rail-card">
+        <span class="notice-kicker">Provider</span>
+        <strong><%= provider.name %></strong>
+        <p><%= provider.ready ? 'Ready. No browser secrets.' : provider.setupMessage %></p>
+      </div>
+    </aside>
 
-    <% if (setupMessage) { %>
-      <%- include('../partials/empty-state', { message: setupMessage, detail: 'The app is running; provider reads are server-side only.' }) %>
-    <% } %>
-    <% if (errorMessage) { %>
-      <%- include('../partials/error-state', { message: errorMessage }) %>
-    <% } %>
+    <section class="main-column">
+      <section class="hero dashboard-hero">
+        <div>
+          <p class="eyebrow">Read-only · server-rendered · no signer custody</p>
+          <h1><%= feed.label %></h1>
+          <p><%= feed.description %></p>
+        </div>
+        <div class="hero-metrics" aria-label="Feed summary">
+          <span><strong><%= casts.length %></strong> casts</span>
+          <span><strong><%= provider.name %></strong> provider</span>
+          <span><strong><%= rank || 'signal' %></strong> ranking</span>
+        </div>
+      </section>
 
-    <section class="feed-list">
-      <% if (casts.length === 0 && !setupMessage && !errorMessage) { %>
-        <%- include('../partials/empty-state', { message: 'No casts found yet.', detail: 'Try a different feed.' }) %>
+      <div class="toolbar">
+        <div class="segmented" aria-label="Ranking">
+          <span>Ranking</span>
+          <a class="<%= (rank || 'signal') === 'signal' ? 'active' : '' %>" href="/feed/<%= feedId %>?rank=signal">Signal</a>
+          <a class="<%= rank === 'recent' ? 'active' : '' %>" href="/feed/<%= feedId %>?rank=recent">Recent</a>
+        </div>
+        <a class="text-link" href="/search?q=<%= encodeURIComponent(feed.query || feed.label) %>&type=casts">Search this lane</a>
+      </div>
+
+      <% if (setupMessage) { %>
+        <%- include('../partials/empty-state', { message: setupMessage, detail: 'Demo mode needs no env vars. Live providers can be plugged in later.' }) %>
       <% } %>
-      <% casts.forEach((cast) => { %>
-        <%- include('../partials/feed-card', { cast }) %>
-      <% }) %>
+      <% if (errorMessage) { %>
+        <%- include('../partials/error-state', { message: errorMessage }) %>
+      <% } %>
+
+      <section class="feed-list">
+        <% if (casts.length === 0 && !setupMessage && !errorMessage) { %>
+          <%- include('../partials/empty-state', { message: 'No casts found yet.', detail: 'Try a different feed or search query.' }) %>
+        <% } %>
+        <% casts.forEach((cast) => { %>
+          <%- include('../partials/feed-card', { cast }) %>
+        <% }) %>
+      </section>
+
+      <% if (nextCursor) { %>
+        <a class="more" href="/feed/<%= feedId %>?cursor=<%= encodeURIComponent(nextCursor) %>&rank=<%= encodeURIComponent(rank || 'signal') %>">More</a>
+      <% } %>
     </section>
 
-    <% if (nextCursor) { %>
-      <a class="more" href="/feed/<%= feedId %>?cursor=<%= encodeURIComponent(nextCursor) %>">More</a>
-    <% } %>
+    <aside class="right-rail" aria-label="Reading context">
+      <div class="rail-card sticky-card">
+        <span class="notice-kicker">Client stance</span>
+        <h2>Read first. Write later.</h2>
+        <p>Feed, profile, thread, and search are production-shaped. Casts/likes/follows intentionally open Farcaster instead of touching signers.</p>
+      </div>
+      <div class="rail-card">
+        <span class="notice-kicker">Fast path</span>
+        <a class="rail-link" href="/u/clawlinker">@clawlinker</a>
+        <a class="rail-link" href="/u/baseddesigner">@baseddesigner</a>
+        <a class="rail-link" href="/search?q=x402&type=casts">x402 casts</a>
+      </div>
+    </aside>
   </main>
   <script src="/app.js"></script>
 </body>

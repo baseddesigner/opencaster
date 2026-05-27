@@ -1,23 +1,26 @@
 <article class="cast-card">
-  <div class="cast-author">
-    <img class="avatar" src="<%= cast.author.pfpUrl %>" alt="" loading="lazy">
-    <div>
-      <a class="author-name" href="/u/<%= encodeURIComponent(cast.author.username) %>"><%= cast.author.displayName %></a>
-      <div class="muted">@<%= cast.author.username %> · <%= cast.timestampLabel %></div>
-    </div>
+  <div class="cast-topline">
+    <a class="cast-author" href="/u/<%= encodeURIComponent(cast.author.username) %>">
+      <img class="avatar" src="<%= cast.author.pfpUrl %>" alt="" loading="lazy">
+      <span>
+        <strong class="author-name"><%= cast.author.displayName %></strong>
+        <span class="muted">@<%= cast.author.username %> · <%= cast.timestampLabel %></span>
+      </span>
+    </a>
+    <span class="signal-chip" title="Engagement score"><%= cast.engagementScoreLabel || '0' %></span>
   </div>
   <p class="cast-text"><%= cast.text %></p>
   <% if (cast.embeds && cast.embeds.length) { %>
     <div class="embeds">
       <% cast.embeds.forEach((embed) => { %>
-        <a href="<%= embed.url %>" target="_blank" rel="noopener noreferrer"><%= embed.label %></a>
+        <a href="<%= embed.url %>" target="_blank" rel="noopener noreferrer"><span>↗</span><%= embed.label %></a>
       <% }) %>
     </div>
   <% } %>
-  <div class="cast-meta">
-    <span><%= cast.replyCountLabel %> replies</span>
-    <span><%= cast.recastCountLabel %> recasts</span>
-    <span><%= cast.likeCountLabel %> likes</span>
+  <div class="cast-meta" aria-label="Cast stats">
+    <span><strong><%= cast.replyCountLabel %></strong> replies</span>
+    <span><strong><%= cast.recastCountLabel %></strong> recasts</span>
+    <span><strong><%= cast.likeCountLabel %></strong> likes</span>
   </div>
   <div class="actions">
     <a href="/cast/<%= encodeURIComponent(cast.hash) %>">View thread</a>

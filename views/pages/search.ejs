@@ -8,9 +8,10 @@
 </head>
 <body>
   <%- include('../partials/header', { active }) %>
-  <main class="shell">
-    <section class="hero compact">
-      <h1>Search</h1>
+  <main class="app-shell single-column">
+    <section class="hero compact search-hero">
+      <p class="eyebrow">Search</p>
+      <h1>Find the cast that explains the room.</h1>
       <form class="search-form" action="/search" method="get">
         <input name="q" value="<%= query %>" maxlength="120" placeholder="Search casts or users" autofocus>
         <select name="type">
@@ -20,13 +21,18 @@
         <button>Search</button>
       </form>
     </section>
-    <% if (setupMessage) { %><%- include('../partials/empty-state', { message: setupMessage }) %><% } %>
+    <% if (setupMessage) { %><%- include('../partials/empty-state', { message: setupMessage, detail: 'Switch to demo mode or plug credentials in later.' }) %><% } %>
     <% if (errorMessage) { %><%- include('../partials/error-state', { message: errorMessage }) %><% } %>
     <section class="feed-list">
       <% casts.forEach((cast) => { %><%- include('../partials/feed-card', { cast }) %><% }) %>
       <% users.forEach((profile) => { %><%- include('../partials/profile-card', { profile }) %><% }) %>
-      <% if (query && !casts.length && !users.length && !setupMessage && !errorMessage) { %><%- include('../partials/empty-state', { message: 'No results.' }) %><% } %>
+      <% if (nextCursor) { %>
+        <a class="more" href="/search?q=<%= encodeURIComponent(query) %>&type=<%= encodeURIComponent(type) %>&cursor=<%= encodeURIComponent(nextCursor) %>">More results</a>
+      <% } %>
+      <% if (query && !casts.length && !users.length && !setupMessage && !errorMessage) { %><%- include('../partials/empty-state', { message: 'No results.', detail: 'Try Base, x402, agents, Farcaster, or a username.' }) %><% } %>
+      <% if (!query) { %><%- include('../partials/empty-state', { message: 'Search is ready.', detail: 'Demo mode includes deterministic casts and profiles, so this works before live credentials exist.' }) %><% } %>
     </section>
   </main>
+  <script src="/app.js"></script>
 </body>
 </html>

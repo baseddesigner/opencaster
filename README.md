@@ -1,28 +1,37 @@
 # Farcaster Lite Client
 
-No-build V0 Farcaster browser.
+Production-shaped, no-build Farcaster client.
 
 - Express + EJS server-rendered HTML.
-- No Next.js, React, TypeScript, Vite, database, auth, or signer flow.
-- Neynar is called server-side only.
-- V0 is read-only; actions open Farcaster directly.
+- Vanilla CSS/JS, no frontend build step.
+- Defaults to deterministic `demo` provider; no env vars needed.
+- Optional Neynar provider stays server-side only.
+- Read-only by design; actions open Farcaster directly.
 
-## Current goal
+## Source docs
 
-- [`docs/GOAL-production-ready-farcaster-client.md`](docs/GOAL-production-ready-farcaster-client.md) — production-ready client target: no-Max demo mode, plug-in provider seams, visual iteration loop, and 9/10 UI gate.
+- [`docs/GOAL-production-ready-farcaster-client.md`](docs/GOAL-production-ready-farcaster-client.md) — implementation target and acceptance gates.
+- [`docs/UI-ITERATIONS.md`](docs/UI-ITERATIONS.md) — visual iterations and 9/10 UI rubric.
+- [`docs/PRODUCTION-CHECKLIST.md`](docs/PRODUCTION-CHECKLIST.md) — production readiness gates and Max-gated items.
 
 ## Setup
 
 ```bash
 cd /root/.hermes/hermes-agent/farcaster-lite-client
-cp .env.example .env
-# optional later: edit .env and set NEYNAR_API_KEY for live data
 npm install
 npm run check
-npm run dev
+FARCASTER_PROVIDER=demo NODE_ENV=production HOST=127.0.0.1 PORT=3039 npm start
 ```
 
 Open: http://127.0.0.1:3039
+
+Live data later:
+
+```bash
+cp .env.example .env
+# set FARCASTER_PROVIDER=neynar and NEYNAR_API_KEY=<your key>
+npm start
+```
 
 ## Routes
 
@@ -32,6 +41,8 @@ Open: http://127.0.0.1:3039
 - `/fid/:fid` profile by FID
 - `/cast/:hash` cast/thread
 - `/search?q=...&type=casts|users` search
+- `/diagnostics` production status page
+- `/readyz` JSON readiness endpoint
 - `/about` explainer
 - `/healthz` health check
 
@@ -40,12 +51,13 @@ Open: http://127.0.0.1:3039
 ```bash
 npm test
 npm run check
+npm run smoke
 npm run dev
 npm start
 ```
 
-There is no build command. That is the point.
+There is no build command. That is still the point.
 
-## V0 boundaries
+## Boundaries
 
-No app-side casts, likes, follows, auth, signer storage, Snapchain node, or Mini App hosting. Add those only after the read-only feed/search/profile experience proves useful.
+No app-side casts, likes, follows, auth, signer storage, payments, Snapchain node, or Mini App hosting. The app has clean provider seams so those can be plugged in later after explicit approval.

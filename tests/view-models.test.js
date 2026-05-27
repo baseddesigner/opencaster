@@ -25,3 +25,9 @@ test('normalizeFeedResponse accepts common Neynar response shapes', () => {
   assert.equal(normalizeFeedResponse({ feed: [{ cast: { hash: 'b' } }], next: { cursor: 'm' } }).casts[0].hash, 'b')
   assert.equal(normalizeFeedResponse({ result: { casts: [{ hash: 'c' }] } }).casts[0].hash, 'c')
 })
+
+
+test('view models filter unsafe avatar URLs and expose parent context', () => {
+  const card = toCastCard({ hash: '0xunsafe', author: { username: 'bad', pfp_url: 'javascript:alert(1)' } })
+  assert.equal(card.author.pfpUrl, '/favicon.svg')
+})

@@ -3,24 +3,26 @@ const { composeUrl } = require('../lib/intent-urls')
 
 function registerCastRoutes(app, ctx) {
   app.get('/cast/:hash', async (req, res) => {
-    if (!ctx.config.apiKey) {
+    if (!ctx.provider.ready) {
       return res.render('pages/cast', {
         title: 'Cast setup needed',
         active: 'cast',
         cast: null,
+        parent: null,
         replies: [],
         replyUrl: composeUrl(''),
-        setupMessage: 'Add NEYNAR_API_KEY to .env to load casts.',
+        setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.',
         errorMessage: ''
       })
     }
     try {
-      const payload = await ctx.neynarClient.fetchCastByHash(req.params.hash)
-      const { cast, replies } = normalizeCastThread(payload)
+      const payload = await ctx.provider.fetchCastByHash(req.params.hash)
+      const { cast, parent, replies } = normalizeCastThread(payload)
       res.render('pages/cast', {
         title: 'Cast',
         active: 'cast',
         cast,
+        parent,
         replies,
         replyUrl: composeUrl(`Replying to ${cast.farcasterUrl}`),
         setupMessage: '',
@@ -31,6 +33,7 @@ function registerCastRoutes(app, ctx) {
         title: 'Cast not found',
         active: 'cast',
         cast: null,
+        parent: null,
         replies: [],
         replyUrl: composeUrl(''),
         setupMessage: '',

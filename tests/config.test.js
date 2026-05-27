@@ -3,27 +3,39 @@ const assert = require('node:assert/strict')
 
 const { loadConfig, FEEDS } = require('../src/config')
 
-test('loadConfig provides safe local defaults and configured feeds', () => {
+test('loadConfig defaults to no-secret demo provider and configured feeds', () => {
   const config = loadConfig({ NODE_ENV: 'test' })
   assert.equal(config.port, 3039)
   assert.equal(config.host, '127.0.0.1')
   assert.equal(config.defaultFeed, 'builders')
   assert.equal(config.cacheTtlSeconds, 60)
+  assert.equal(config.provider, 'demo')
+  assert.equal(config.apiKey, '')
+  assert.equal(config.isLiveProvider, false)
   assert.ok(FEEDS.builders)
   assert.ok(FEEDS.agents)
   assert.ok(FEEDS.trending)
 })
 
-test('loadConfig requires NEYNAR_API_KEY in production', () => {
-  assert.throws(
-    () => loadConfig({ NODE_ENV: 'production', NEYNAR_API_KEY: '' }),
-    /NEYNAR_API_KEY is required/
-  )
+test('loadConfig never requires env vars for production demo mode', () => {
+  const config = loadConfig({ NODE_ENV: 'production', FARCASTER_PROVIDER: 'demo', NEYNAR_API_KEY: '' })
+  assert.equal(config.nodeEnv, 'production')
+  assert.equal(config.provider, 'demo')
+  assert.equal(config.isLiveProvider, false)
 })
 
-test('loadConfig accepts explicit env values', () => {
+test('loadConfig keeps Neynar optional and reports setup state when missing key', () => {
+  const config = loadConfig({ NODE_ENV: 'production', FARCASTER_PROVIDER: 'neynar', NEYNAR_API_KEY: '' })
+  assert.equal(config.provider, 'neynar')
+  assert.equal(config.isLiveProvider, true)
+  assert.equal(config.providerReady, false)
+  assert.match(config.providerSetupMessage, /NEYNAR_API_KEY/)
+})
+
+test('loadConfig accepts explicit live provider values', () => {
   const config = loadConfig({
     NODE_ENV: 'development',
+    FARCASTER_PROVIDER: 'neynar',
     NEYNAR_API_KEY: 'secret',
     PORT: '4444',
     HOST: '127.0.0.2',
@@ -32,6 +44,8 @@ test('loadConfig accepts explicit env values', () => {
     PUBLIC_BASE_URL: 'https://example.com'
   })
   assert.equal(config.apiKey, 'secret')
+  assert.equal(config.provider, 'neynar')
+  assert.equal(config.providerReady, true)
   assert.equal(config.port, 4444)
   assert.equal(config.host, '127.0.0.2')
   assert.equal(config.defaultFeed, 'agents')
