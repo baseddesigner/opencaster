@@ -50,3 +50,13 @@ test('demo feed does not emit phantom cursor when first page includes all casts'
   const feed = await provider.fetchFeed({ feedId: 'builders', query: 'base', limit: 20 })
   assert.equal(feed.nextCursor, null)
 })
+
+
+test('provider factory creates ready no-key Hypersnap provider', () => {
+  const provider = createProvider({ provider: 'hypersnap', hypersnapBaseUrl: 'https://example.test' })
+  assert.equal(provider.name, 'hypersnap')
+  assert.equal(provider.ready, true)
+  assert.equal(provider.setupMessage, '')
+  assert.equal(provider.diagnostics().baseUrl, 'https://example.test')
+  assert.equal(provider.diagnostics().liveData, true)
+})

@@ -48,8 +48,10 @@ const FEEDS = {
 
 const envSchema = z.object({
   NODE_ENV: z.string().default('development'),
-  FARCASTER_PROVIDER: z.enum(['demo', 'neynar']).default('demo'),
+  FARCASTER_PROVIDER: z.enum(['demo', 'hypersnap', 'neynar']).default('demo'),
   NEYNAR_API_KEY: z.string().optional().default(''),
+  HYPERSNAP_BASE_URL: z.string().url().default('https://haatz.quilibrium.com'),
+  HYPERSNAP_VIEWER_FID: z.coerce.number().int().positive().default(1325),
   PORT: z.coerce.number().int().positive().default(3039),
   HOST: z.string().default('127.0.0.1'),
   DEFAULT_FEED: z.string().default('builders'),
@@ -62,15 +64,17 @@ function loadConfig(env = process.env) {
   const defaultFeed = FEEDS[parsed.DEFAULT_FEED] ? parsed.DEFAULT_FEED : 'builders'
   const provider = parsed.FARCASTER_PROVIDER
   const isLiveProvider = provider !== 'demo'
-  const providerReady = provider === 'demo' || Boolean(parsed.NEYNAR_API_KEY)
+  const providerReady = provider === 'demo' || provider === 'hypersnap' || Boolean(parsed.NEYNAR_API_KEY)
   const providerSetupMessage = providerReady
     ? ''
-    : 'NEYNAR_API_KEY is missing. Demo mode works without secrets; add the key later to enable live Neynar reads.'
+    : 'NEYNAR_API_KEY is missing. Demo and Hypersnap modes work without secrets; add the key later to enable live Neynar reads.'
 
   return {
     nodeEnv: parsed.NODE_ENV,
     provider,
     apiKey: parsed.NEYNAR_API_KEY,
+    hypersnapBaseUrl: parsed.HYPERSNAP_BASE_URL.replace(/\/+$/, ''),
+    hypersnapViewerFid: parsed.HYPERSNAP_VIEWER_FID,
     isLiveProvider,
     providerReady,
     providerSetupMessage,

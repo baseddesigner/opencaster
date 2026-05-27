@@ -52,3 +52,13 @@ test('loadConfig accepts explicit live provider values', () => {
   assert.equal(config.cacheTtlSeconds, 5)
   assert.equal(config.publicBaseUrl, 'https://example.com')
 })
+
+
+test('loadConfig accepts no-key Hypersnap live provider with safe default base URL', () => {
+  const config = loadConfig({ NODE_ENV: 'production', FARCASTER_PROVIDER: 'hypersnap' })
+  assert.equal(config.provider, 'hypersnap')
+  assert.equal(config.providerReady, true)
+  assert.equal(config.isLiveProvider, true)
+  assert.equal(config.hypersnapBaseUrl, 'https://haatz.quilibrium.com')
+  assert.equal(config.providerSetupMessage, '')
+})

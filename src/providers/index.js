@@ -1,5 +1,6 @@
 const { ProviderError } = require('../lib/errors')
 const { createDemoProvider } = require('./demo-provider')
+const { createHypersnapClient } = require('./hypersnap-provider')
 const { createNeynarClient } = require('../neynar')
 
 function createSetupOnlyProvider({ name = 'neynar', setupMessage = 'Provider credentials are missing.' } = {}) {
@@ -22,6 +23,13 @@ function createSetupOnlyProvider({ name = 'neynar', setupMessage = 'Provider cre
 }
 
 function createProvider(config = {}) {
+  if (config.provider === 'hypersnap') {
+    return createHypersnapClient({
+      baseUrl: config.hypersnapBaseUrl,
+      viewerFid: config.hypersnapViewerFid
+    })
+  }
+
   if (config.provider === 'neynar') {
     if (!config.apiKey) return createSetupOnlyProvider({ name: 'neynar', setupMessage: config.providerSetupMessage || 'NEYNAR_API_KEY is missing. Add it later to enable live Neynar reads.' })
     const client = createNeynarClient({ apiKey: config.apiKey })

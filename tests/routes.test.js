@@ -78,6 +78,7 @@ test('profile, cast, and search routes render server-side pages', async () => {
 test('no generic provider proxy exists', async () => {
   const app = createApp({ provider: mockProvider(), config: baseConfig })
   await request(app).get('/api/neynar/v2/farcaster/feed').expect(404)
+  await request(app).get('/api/hypersnap/v2/farcaster/feed').expect(404)
 })
 
 

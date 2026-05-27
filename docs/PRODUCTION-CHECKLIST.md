@@ -1,6 +1,6 @@
 # Production Checklist
 
-Status: complete for no-secret demo-mode production readiness. Live provider credentials and write/auth surfaces remain Max-gated by design.
+Status: complete for no-secret demo-mode production readiness and no-key Hypersnap live-read readiness. Neynar credentials and write/auth surfaces remain Max-gated by design.
 
 ## Runtime
 
@@ -8,6 +8,7 @@ Status: complete for no-secret demo-mode production readiness. Live provider cre
 - [x] `NODE_ENV=production FARCASTER_PROVIDER=demo npm start` boots.
 - [x] `npm run check` passes.
 - [x] `npm run smoke` covers core routes and confirms no generic provider proxy.
+- [x] `FARCASTER_PROVIDER=hypersnap npm run smoke` covers live no-key core routes.
 - [x] `/healthz` returns plain `ok` for simple process health.
 - [x] `/readyz` returns JSON readiness without secrets.
 - [x] `/diagnostics` renders production status without secrets.
@@ -15,6 +16,7 @@ Status: complete for no-secret demo-mode production readiness. Live provider cre
 ## Provider boundary
 
 - [x] Demo provider is deterministic and realistic enough for UI/product review.
+- [x] Hypersnap provider gives no-key live reads through `https://haatz.quilibrium.com`.
 - [x] Neynar provider remains optional.
 - [x] Missing Neynar credentials render setup states instead of crashing.
 - [x] Real provider integration can be enabled later via config/credentials only.
@@ -28,7 +30,7 @@ Status: complete for no-secret demo-mode production readiness. Live provider cre
 - [x] `Referrer-Policy` set.
 - [x] `Permissions-Policy` set.
 - [x] Content Security Policy set.
-- [x] No generic `/api/neynar/*` or provider proxy exists.
+- [x] No generic `/api/neynar/*`, `/api/hypersnap/*`, or provider proxy exists.
 - [x] Provider key does not appear in rendered HTML, errors, diagnostics, or readiness JSON.
 - [x] User/cast content renders through EJS escaping.
 - [x] Unsafe external embed URLs and avatar/profile image URLs are filtered.
@@ -55,6 +57,8 @@ Status: complete for no-secret demo-mode production readiness. Live provider cre
 
 - [x] Config defaults to demo mode.
 - [x] Production demo mode does not require env vars.
+- [x] Hypersnap config works without keys and defaults to Cassie’s public node.
+- [x] Hypersnap client sends no auth headers and maps feed/user/cast/search endpoints.
 - [x] Missing Neynar key is setup-only, not fatal.
 - [x] Demo provider covers feed/search/profile/thread.
 - [x] Provider factory selects demo or setup-only Neynar correctly.

@@ -1,0 +1,86 @@
+const { ProviderError } = require('../lib/errors')
+
+function createHypersnapClient({
+  baseUrl = 'https://haatz.quilibrium.com',
+  viewerFid = 1325,
+  fetchImpl = global.fetch,
+  timeoutMs = 8000
+} = {}) {
+  if (!fetchImpl) throw new Error('fetch implementation is required')
+  const cleanBaseUrl = String(baseUrl || 'https://haatz.quilibrium.com').replace(/\/+$/, '')
+
+  async function request(path, params = {}) {
+    const url = new URL(path, cleanBaseUrl)
+    for (const [key, value] of Object.entries(params || {})) {
+      if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
+    }
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const res = await fetchImpl(url.toString(), {
+        headers: {
+          accept: 'application/json',
+          'user-agent': 'farcaster-lite-client/0.1'
+        },
+        signal: controller.signal
+      })
+      if (!res.ok) {
+        throw new ProviderError(`Hypersnap request failed with status ${res.status}`, { status: res.status })
+      }
+      return await res.json()
+    } catch (err) {
+      if (err instanceof ProviderError) throw err
+      const message = err?.name === 'AbortError'
+        ? 'Hypersnap is slow right now. Try again in a minute.'
+        : 'Hypersnap data is unavailable right now. Try again in a minute.'
+      throw new ProviderError(message, { cause: err })
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  return {
+    name: 'hypersnap',
+    ready: true,
+    setupMessage: '',
+    request,
+    async fetchFeed({ limit = 20, cursor, query, fid } = {}) {
+      if (query) return this.searchCasts(query, { limit, cursor })
+      return request('/v2/farcaster/feed', { fid: fid || viewerFid, limit, cursor })
+    },
+    async fetchTrendingFeed({ limit = 20, cursor } = {}) {
+      return request('/v2/farcaster/feed', { fid: viewerFid, limit, cursor })
+    },
+    async fetchUserByUsername(username) {
+      const payload = await request('/v2/farcaster/user/by_username', { username })
+      return payload.user || payload.result?.user || payload
+    },
+    async fetchUserByFid(fid) {
+      const payload = await request('/v2/farcaster/user/bulk', { fids: fid })
+      return payload.users?.[0] || payload.result?.users?.[0] || payload.user || payload
+    },
+    async fetchCastByHash(hash) {
+      return request('/v2/farcaster/cast', { identifier: hash, type: 'hash' })
+    },
+    async searchCasts(query, { limit = 20, cursor } = {}) {
+      return request('/v2/farcaster/cast/search', { q: query, limit, cursor })
+    },
+    async searchUsers(query, { limit = 20, cursor } = {}) {
+      return request('/v2/farcaster/user/search', { q: query, limit, cursor })
+    },
+    diagnostics() {
+      return {
+        name: 'hypersnap',
+        ready: true,
+        mode: 'live-provider',
+        liveData: true,
+        noKeyRequired: true,
+        baseUrl: cleanBaseUrl,
+        viewerFid
+      }
+    }
+  }
+}
+
+module.exports = { createHypersnapClient }
