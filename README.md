@@ -7,12 +7,16 @@ No-build V0 Farcaster browser.
 - Neynar is called server-side only.
 - V0 is read-only; actions open Farcaster directly.
 
+## Current goal
+
+- [`docs/GOAL-production-ready-farcaster-client.md`](docs/GOAL-production-ready-farcaster-client.md) — production-ready client target: no-Max demo mode, plug-in provider seams, visual iteration loop, and 9/10 UI gate.
+
 ## Setup
 
 ```bash
 cd /root/.hermes/hermes-agent/farcaster-lite-client
 cp .env.example .env
-# edit .env and set NEYNAR_API_KEY for live data
+# optional later: edit .env and set NEYNAR_API_KEY for live data
 npm install
 npm run check
 npm run dev
