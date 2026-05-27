@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · Farcaster Lite</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <%- include('../partials/header', { active }) %>
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Read-only · no build step</p>
+      <h1><%= feed.label %></h1>
+      <p><%= feed.description %></p>
+      <div class="feed-tabs">
+        <% Object.entries(feeds).forEach(([id, item]) => { %>
+          <a class="<%= id === feedId ? 'active' : '' %>" href="/feed/<%= id %>"><%= item.label %></a>
+        <% }) %>
+      </div>
+    </section>
+
+    <% if (setupMessage) { %>
+      <%- include('../partials/empty-state', { message: setupMessage, detail: 'The app is running; provider reads are server-side only.' }) %>
+    <% } %>
+    <% if (errorMessage) { %>
+      <%- include('../partials/error-state', { message: errorMessage }) %>
+    <% } %>
+
+    <section class="feed-list">
+      <% if (casts.length === 0 && !setupMessage && !errorMessage) { %>
+        <%- include('../partials/empty-state', { message: 'No casts found yet.', detail: 'Try a different feed.' }) %>
+      <% } %>
+      <% casts.forEach((cast) => { %>
+        <%- include('../partials/feed-card', { cast }) %>
+      <% }) %>
+    </section>
+
+    <% if (nextCursor) { %>
+      <a class="more" href="/feed/<%= feedId %>?cursor=<%= encodeURIComponent(nextCursor) %>">More</a>
+    <% } %>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

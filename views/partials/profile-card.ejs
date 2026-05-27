@@ -1,0 +1,10 @@
+<article class="profile-card">
+  <img class="avatar large" src="<%= profile.pfpUrl %>" alt="" loading="lazy">
+  <div>
+    <h2><%= profile.displayName %></h2>
+    <p class="muted">@<%= profile.username %><% if (profile.fid) { %> · FID <%= profile.fid %><% } %></p>
+    <% if (profile.bio) { %><p><%= profile.bio %></p><% } %>
+    <p class="muted"><%= profile.followerCountLabel %> followers · <%= profile.followingCountLabel %> following</p>
+    <a href="<%= profile.farcasterUrl %>" target="_blank" rel="noopener noreferrer">Open profile in Farcaster</a>
+  </div>
+</article>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Search · Farcaster Lite</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <%- include('../partials/header', { active }) %>
+  <main class="shell">
+    <section class="hero compact">
+      <h1>Search</h1>
+      <form class="search-form" action="/search" method="get">
+        <input name="q" value="<%= query %>" maxlength="120" placeholder="Search casts or users" autofocus>
+        <select name="type">
+          <option value="casts" <%= type === 'casts' ? 'selected' : '' %>>Casts</option>
+          <option value="users" <%= type === 'users' ? 'selected' : '' %>>Users</option>
+        </select>
+        <button>Search</button>
+      </form>
+    </section>
+    <% if (setupMessage) { %><%- include('../partials/empty-state', { message: setupMessage }) %><% } %>
+    <% if (errorMessage) { %><%- include('../partials/error-state', { message: errorMessage }) %><% } %>
+    <section class="feed-list">
+      <% casts.forEach((cast) => { %><%- include('../partials/feed-card', { cast }) %><% }) %>
+      <% users.forEach((profile) => { %><%- include('../partials/profile-card', { profile }) %><% }) %>
+      <% if (query && !casts.length && !users.length && !setupMessage && !errorMessage) { %><%- include('../partials/empty-state', { message: 'No results.' }) %><% } %>
+    </section>
+  </main>
+</body>
+</html>

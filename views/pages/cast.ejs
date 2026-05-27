@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · Farcaster Lite</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <%- include('../partials/header', { active }) %>
+  <main class="shell">
+    <% if (setupMessage) { %><%- include('../partials/empty-state', { message: setupMessage }) %><% } %>
+    <% if (errorMessage) { %><%- include('../partials/error-state', { message: errorMessage }) %><% } %>
+    <% if (cast) { %>
+      <%- include('../partials/feed-card', { cast }) %>
+      <div class="actions block"><a href="<%= replyUrl %>" target="_blank" rel="noopener noreferrer">Reply in Farcaster</a></div>
+      <h2>Replies</h2>
+      <section class="feed-list replies">
+        <% replies.forEach((reply) => { %><%- include('../partials/feed-card', { cast: reply }) %><% }) %>
+        <% if (!replies.length) { %><%- include('../partials/empty-state', { message: 'No replies loaded.' }) %><% } %>
+      </section>
+    <% } %>
+  </main>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About · Farcaster Lite</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <%- include('../partials/header', { active }) %>
+  <main class="shell prose">
+    <p class="eyebrow">No-build Farcaster client</p>
+    <h1>Farcaster Lite</h1>
+    <p>A read-only, server-rendered Farcaster browser. No Next.js, no React, no signer flow, no database. Just useful pages backed by server-side Neynar reads.</p>
+    <ul>
+      <li>Feed, profile, cast/thread, and search pages.</li>
+      <li>Provider key stays on the server.</li>
+      <li>Actions open Farcaster directly.</li>
+    </ul>
+  </main>
+</body>
+</html>
