@@ -70,7 +70,7 @@ test('profile, cast, and search routes render server-side pages', async () => {
   const app = createApp({ provider: mockProvider(), config: baseConfig })
   assert.match((await request(app).get('/u/alice').expect(200)).text, /builder/)
   assert.match((await request(app).get('/fid/1').expect(200)).text, /FID User/)
-  assert.match((await request(app).get('/cast/0xabc').expect(200)).text, /thread root/)
+  assert.match((await request(app).get('/cast/0xabcdef12').expect(200)).text, /thread root/)
   assert.match((await request(app).get('/search?q=base&type=casts').expect(200)).text, /search result/)
   assert.match((await request(app).get('/search?q=carol&type=users').expect(200)).text, /Carol/)
 })
@@ -93,4 +93,46 @@ test('thread page renders parent context and search supports continuation plus l
 
   const users = await request(app).get('/search?q=max&type=users').expect(200)
   assert.match(users.text, /href="\/u\/baseddesigner"/)
+})
+
+
+test('profile route uses authored casts provider method instead of username search', async () => {
+  const calls = []
+  const app = createApp({
+    provider: mockProvider({
+      fetchUserByUsername: async () => ({ fid: 42, username: 'alice', display_name: 'Alice' }),
+      fetchUserCasts: async ({ fid, limit }) => {
+        calls.push({ fid, limit })
+        return { casts: [{ hash: '0xauthored', text: 'authored cast', author: { username: 'alice' } }], nextCursor: null }
+      },
+      fetchFeed: async () => { throw new Error('profile must not use query search fallback when fetchUserCasts exists') }
+    }),
+    config: baseConfig
+  })
+  const res = await request(app).get('/u/alice').expect(200)
+  assert.deepEqual(calls, [{ fid: 42, limit: 10 }])
+  assert.match(res.text, /authored cast/)
+})
+
+test('routes reject invalid path/query params before provider calls', async () => {
+  const app = createApp({ provider: mockProvider(), config: baseConfig })
+  await request(app).get('/fid/not-a-number').expect(400)
+  await request(app).get('/u/not valid').expect(400)
+  await request(app).get('/cast/not-a-hash').expect(400)
+  await request(app).get(`/search?q=base&type=casts&cursor=${'x'.repeat(241)}`).expect(400)
+})
+
+
+test('configured feed falls back when live search returns no casts', async () => {
+  const calls = []
+  const app = createApp({
+    provider: mockProvider({
+      fetchFeed: async () => { calls.push('search'); return { casts: [], nextCursor: null } },
+      fetchTrendingFeed: async () => { calls.push('fallback'); return { casts: [{ hash: '0xfallback123', text: 'fallback trend', author: { username: 'bob' } }], nextCursor: null } }
+    }),
+    config: baseConfig
+  })
+  const res = await request(app).get('/feed/builders').expect(200)
+  assert.deepEqual(calls, ['search', 'fallback'])
+  assert.match(res.text, /fallback trend/)
 })

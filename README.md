@@ -62,6 +62,7 @@ npm test
 npm run check
 npm run smoke
 FARCASTER_PROVIDER=hypersnap npm run smoke
+node scripts/mobile-cdp-qa.js # requires app on :3039 + Chromium CDP on :9223
 npm run dev
 npm start
 ```

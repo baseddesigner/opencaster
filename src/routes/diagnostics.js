@@ -1,8 +1,23 @@
 const { buildDiagnostics } = require('../lib/diagnostics')
 
+async function withHealthProbe(diagnostics, provider) {
+  if (!provider?.healthCheck) return diagnostics
+  const health = await provider.healthCheck()
+  return {
+    ...diagnostics,
+    ok: Boolean(health.ready),
+    provider: {
+      ...diagnostics.provider,
+      ready: Boolean(health.ready),
+      healthStatus: health.status || (health.ready ? 200 : 502),
+      healthMessage: health.ready ? '' : (health.message || 'Provider health check failed.')
+    }
+  }
+}
+
 function registerDiagnosticsRoutes(app, ctx) {
-  app.get('/readyz', (req, res) => {
-    const diagnostics = buildDiagnostics({ config: ctx.config, provider: ctx.provider })
+  app.get('/readyz', async (req, res) => {
+    const diagnostics = await withHealthProbe(buildDiagnostics({ config: ctx.config, provider: ctx.provider }), ctx.provider)
     res.status(diagnostics.ok ? 200 : 503).json(diagnostics)
   })
 

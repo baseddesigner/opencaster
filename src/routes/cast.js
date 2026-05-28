@@ -1,5 +1,6 @@
 const { normalizeCastThread } = require('../lib/view-models')
 const { composeUrl } = require('../lib/intent-urls')
+const { parseCastHash } = require('../lib/params')
 
 function registerCastRoutes(app, ctx) {
   app.get('/cast/:hash', async (req, res) => {
@@ -16,7 +17,8 @@ function registerCastRoutes(app, ctx) {
       })
     }
     try {
-      const payload = await ctx.provider.fetchCastByHash(req.params.hash)
+      const hash = parseCastHash(req.params.hash)
+      const payload = await ctx.cache.cached(`cast:${ctx.provider.name}:${hash}`, ctx.config.cacheTtlSeconds * 1000, async () => ctx.provider.fetchCastByHash(hash))
       const { cast, parent, replies } = normalizeCastThread(payload)
       res.render('pages/cast', {
         title: 'Cast',

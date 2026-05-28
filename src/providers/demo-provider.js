@@ -140,6 +140,13 @@ function createDemoProvider() {
     async fetchTrendingFeed({ limit = 20, cursor = '' } = {}) {
       return this.fetchFeed({ feedId: 'trending', limit, cursor })
     },
+    async fetchUserCasts({ fid, limit = 20, cursor = '' } = {}) {
+      const user = USERS.find((item) => String(item.fid) === String(fid))
+      if (!user) throw new NotFoundError('Demo FID not found.')
+      const casts = CASTS.filter((item) => item.author.username === user.username)
+      const { page, nextCursor } = paginate(casts, limit, cursor)
+      return { casts: page, nextCursor }
+    },
     async fetchUserByUsername(username) {
       const user = USERS.find((item) => item.username.toLowerCase() === String(username || '').toLowerCase())
       if (!user) throw new NotFoundError('Demo profile not found.')

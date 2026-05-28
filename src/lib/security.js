@@ -1,14 +1,15 @@
 function securityHeaders(req, res, next) {
   res.setHeader('X-Content-Type-Options', 'nosniff')
-  res.setHeader('Referrer-Policy', 'no-referrer-when-downgrade')
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains')
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "img-src 'self' https: data:",
-    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' https:",
+    "style-src 'self'",
     "script-src 'self'",
     "connect-src 'self'"
   ].join('; '))
@@ -46,7 +47,7 @@ function isSafeExternalUrl(url) {
 function isSafeImageUrl(url) {
   const value = String(url || '')
   if (value.startsWith('/')) return true
-  if (/^data:image\/(png|jpeg|jpg|gif|webp|svg\+xml);/i.test(value)) return true
+  if (/^data:image\/(png|jpeg|jpg|gif|webp);/i.test(value)) return true
   return isSafeExternalUrl(value)
 }
 

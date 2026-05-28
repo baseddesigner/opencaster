@@ -28,7 +28,11 @@ function createHypersnapClient({
       if (!res.ok) {
         throw new ProviderError(`Hypersnap request failed with status ${res.status}`, { status: res.status })
       }
-      return await res.json()
+      try {
+        return await res.json()
+      } catch (err) {
+        throw new ProviderError('Hypersnap returned malformed JSON.', { cause: err })
+      }
     } catch (err) {
       if (err instanceof ProviderError) throw err
       const message = err?.name === 'AbortError'
@@ -40,6 +44,10 @@ function createHypersnapClient({
     }
   }
 
+  async function fallbackToViewerFeed({ limit = 20, cursor } = {}) {
+    return request('/v2/farcaster/feed', { fid: viewerFid, limit, cursor })
+  }
+
   return {
     name: 'hypersnap',
     ready: true,
@@ -47,10 +55,17 @@ function createHypersnapClient({
     request,
     async fetchFeed({ limit = 20, cursor, query, fid } = {}) {
       if (query) return this.searchCasts(query, { limit, cursor })
+      return this.fetchUserCasts({ fid: fid || viewerFid, limit, cursor })
+    },
+    async fetchUserCasts({ fid, limit = 20, cursor } = {}) {
       return request('/v2/farcaster/feed', { fid: fid || viewerFid, limit, cursor })
     },
     async fetchTrendingFeed({ limit = 20, cursor } = {}) {
-      return request('/v2/farcaster/feed', { fid: viewerFid, limit, cursor })
+      try {
+        return await request('/v2/farcaster/feed/trending', { limit, cursor })
+      } catch (_) {
+        return fallbackToViewerFeed({ limit, cursor })
+      }
     },
     async fetchUserByUsername(username) {
       const payload = await request('/v2/farcaster/user/by_username', { username })
@@ -61,13 +76,21 @@ function createHypersnapClient({
       return payload.users?.[0] || payload.result?.users?.[0] || payload.user || payload
     },
     async fetchCastByHash(hash) {
-      return request('/v2/farcaster/cast', { identifier: hash, type: 'hash' })
+      return request('/v2/farcaster/cast/conversation', { identifier: hash, type: 'hash', reply_depth: 2 })
     },
     async searchCasts(query, { limit = 20, cursor } = {}) {
       return request('/v2/farcaster/cast/search', { q: query, limit, cursor })
     },
     async searchUsers(query, { limit = 20, cursor } = {}) {
       return request('/v2/farcaster/user/search', { q: query, limit, cursor })
+    },
+    async healthCheck() {
+      try {
+        await request('/v1/info')
+        return { ready: true, status: 200 }
+      } catch (err) {
+        return { ready: false, status: err.status || 502, message: err.message }
+      }
     },
     diagnostics() {
       return {
