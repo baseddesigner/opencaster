@@ -26,6 +26,7 @@ test('security headers are set for production pages', async () => {
   assert.equal(res.headers['x-content-type-options'], 'nosniff')
   assert.equal(res.headers['referrer-policy'], 'strict-origin-when-cross-origin')
   assert.equal(res.headers['strict-transport-security'], 'max-age=15552000; includeSubDomains')
+  assert.equal(res.headers['x-robots-tag'], 'noindex, nofollow')
   assert.match(res.headers['content-security-policy'], /default-src 'self'/)
   assert.match(res.headers['content-security-policy'], /style-src 'self'/)
   assert.doesNotMatch(res.headers['content-security-policy'], /unsafe-inline/)
