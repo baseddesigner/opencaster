@@ -32,7 +32,7 @@ Route/view layer
 
 ### Phase 1 — Hypersnap provider
 
-Goal: get real Farcaster data without Max providing env vars.
+Goal: get real Farcaster data without private env vars.
 
 Tasks:
 
@@ -159,6 +159,6 @@ Scope:
 Why now:
 
 - It uses Cassie’s free API find immediately.
-- It keeps us moving without asking Max for keys.
+- It keeps the project moving without asking maintainers for keys.
 - It strengthens the provider seam we just built.
 - It gives the UI real data without operating Snapchain infra.

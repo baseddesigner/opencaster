@@ -1,5 +1,10 @@
 .env
+.env.*
+!.env.example
 node_modules/
 npm-debug.log*
 .DS_Store
 coverage/
+.cache/
+.tmp/
+*.log

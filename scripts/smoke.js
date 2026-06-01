@@ -9,9 +9,21 @@ function smokePaths(provider = process.env.FARCASTER_PROVIDER || 'demo') {
   return ['/', '/feed/agents', '/u/clawlinker', '/cast/demo-001', '/search?q=x402&type=casts', '/diagnostics', '/readyz']
 }
 
+async function detectProvider(base) {
+  if (process.env.FARCASTER_PROVIDER) return process.env.FARCASTER_PROVIDER
+  try {
+    const res = await fetch(`${base}/readyz`)
+    if (!res.ok) return 'demo'
+    const diagnostics = await res.json()
+    return diagnostics.provider?.name || 'demo'
+  } catch (_) {
+    return 'demo'
+  }
+}
+
 async function main() {
   const base = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:3039'
-  const paths = smokePaths()
+  const paths = smokePaths(await detectProvider(base))
   for (const path of paths) {
     const res = await fetch(`${base}${path}`)
     assert.equal(res.ok, true, `${path} returned ${res.status}`)

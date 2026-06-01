@@ -167,4 +167,4 @@ Why it clears:
 
 Known nonblocking caveat:
 
-- No user study or Max taste review yet. The internal rubric is passed; Max can still hate a radius and be correct, because humans are like that.
+- No user study or maintainer taste review yet. The internal rubric is passed; a real user can still hate a radius and be correct, because humans are like that.

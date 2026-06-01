@@ -20,7 +20,7 @@ Best use:
 
 - First real no-key provider for our client.
 - Neynar-shaped reads: feeds, profiles, casts, search, channel-style surfaces.
-- Great for demo-to-live progression without Max handing us credentials.
+- Great for demo-to-live progression without maintainers handing over credentials.
 
 Risks:
 

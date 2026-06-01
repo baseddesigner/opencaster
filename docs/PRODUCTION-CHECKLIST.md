@@ -1,6 +1,6 @@
 # Production Checklist
 
-Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key Hypersnap live reads, mobile QA, stricter input/security, and explicit no-write boundary are all verified. Write/auth surfaces remain Max-gated by design.
+Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key Hypersnap live reads, mobile QA, stricter input/security, and explicit no-write boundary are all verified. Write/auth surfaces remain maintainer-gated by design.
 
 ## Runtime
 
@@ -77,7 +77,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [x] Secret non-leak tests cover pages and diagnostics.
 - [x] No generic provider proxy route exists.
 
-## Max-gated later
+## Maintainer-gated later
 
 - [ ] Live Neynar key and production provider selection.
 - [ ] Production hosting/deployment credentials.

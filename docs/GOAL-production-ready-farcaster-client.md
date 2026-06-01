@@ -1,6 +1,6 @@
 # Goal: Production-Ready Farcaster Client
 
-> **For Hermes:** Build this as far as possible without Max. Do not block on env vars, API keys, credentials, deployment accounts, paid services, or brand decisions. Create clean plug-in seams so those can be added later and everything works smoothly.
+> **Implementation note:** Build this as far as possible without private credentials, deployment accounts, paid services, or brand decisions. Create clean plug-in seams so those can be added later and everything works smoothly.
 
 ## North Star
 
@@ -10,8 +10,8 @@ The end state should feel like a daily-use Farcaster power client for people who
 
 ## Hard Constraints
 
-- Do **not** require Max for env vars, API keys, paid provider setup, deployment credentials, signer approvals, wallet actions, or content decisions.
-- Do **not** ship app-side casts, likes, follows, DMs, token-gated actions, payments, or signer custody unless Max explicitly approves that later.
+- Do **not** require private env vars, API keys, paid provider setup, deployment credentials, signer approvals, wallet actions, or content decisions.
+- Do **not** ship app-side casts, likes, follows, DMs, token-gated actions, payments, or signer custody unless maintainers explicitly approve that later.
 - Do **not** expose provider keys in browser code, rendered HTML, logs, or errors.
 - Do **not** add a generic provider proxy route.
 - Do **not** block production-quality UI work on live Farcaster data. Build with deterministic mock/demo providers and swap in real providers later.
@@ -102,7 +102,7 @@ Implement a first-class demo provider:
 - Missing live credentials render a setup state, not a crash.
 - Tests run entirely against demo/provider fixtures.
 
-This means the app can be designed, tested, reviewed, and production-hardened before Max plugs in secrets.
+This means the app can be designed, tested, reviewed, and production-hardened before maintainers plug in secrets.
 
 ## UI Goal
 
@@ -177,7 +177,7 @@ Score each 1–10:
 - Desktop quality: does it use space intelligently?
 - States: loading, empty, error, setup, and offline states feel designed.
 - Accessibility: contrast, focus, targets, semantic structure.
-- Product taste: would Max plausibly say “yeah, this is actually nice”?
+- Product taste: would a real Farcaster power user plausibly say “yeah, this is actually nice”?
 
 Completion requires:
 
@@ -240,7 +240,7 @@ The goal is complete only when:
 - The main pages are production-styled, responsive, and documented.
 - UI iterations are documented and the final UI reaches the 9/10 rubric gate.
 - Real provider integration can be enabled later by adding credentials/config only, not rewriting the app.
-- Production checklist is complete or every remaining item is explicitly marked as Max-gated.
+- Production checklist is complete or every remaining item is explicitly marked as maintainer-gated.
 - README points to the goal, UI iterations, setup, and production checklist.
 
 ## One-Shot Implementation Prompt
@@ -250,7 +250,7 @@ Use this if delegating to a coding agent:
 ```txt
 Build the Farcaster client toward docs/GOAL-production-ready-farcaster-client.md.
 
-Do not ask Max for env vars, API keys, deployment credentials, paid services, or approvals. Default to demo mode and deterministic fixtures. Add clean provider seams so live providers can be plugged in later.
+Do not ask for env vars, API keys, deployment credentials, paid services, or approvals. Default to demo mode and deterministic fixtures. Add clean provider seams so live providers can be plugged in later.
 
 Prioritize production-ready UX and UI. Run at least 4 visual iterations, document them in docs/UI-ITERATIONS.md, and do not call the UI complete until it scores >=9/10 by the rubric with no category below 8. If it scores lower, keep iterating.
 
@@ -258,5 +258,5 @@ Do not add write actions, auth, signer custody, social posting, payments, or ext
 
 Verify with npm run check, production demo-mode smoke tests, responsive/manual UI review where possible, and docs/PRODUCTION-CHECKLIST.md.
 
-Ship the complete local implementation and leave only explicit Max-gated items for later.
+Ship the complete local implementation and leave only explicit maintainer-gated items for later.
 ```

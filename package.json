@@ -1,9 +1,30 @@
 {
   "name": "farcaster-lite-client",
   "version": "0.1.0",
-  "description": "No-build read-only Farcaster client using Express and EJS",
+  "description": "No-build, read-only Farcaster client using Express, EJS, and server-side providers.",
+  "license": "MIT",
   "main": "src/server.js",
   "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baseddesigner/farcaster-client.git"
+  },
+  "bugs": {
+    "url": "https://github.com/baseddesigner/farcaster-client/issues"
+  },
+  "homepage": "https://github.com/baseddesigner/farcaster-client#readme",
+  "keywords": [
+    "farcaster",
+    "social-client",
+    "express",
+    "ejs",
+    "hypersnap",
+    "neynar",
+    "read-only"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
