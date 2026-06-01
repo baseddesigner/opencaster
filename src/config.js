@@ -4,9 +4,9 @@ const FEEDS = {
   builders: {
     label: 'Builders',
     shortLabel: 'Build',
-    description: 'Farcaster apps, protocol work, devtools, and useful product shipping.',
+    description: 'Farcaster client design, feed quality, social graph, and useful product shipping.',
     mode: 'search',
-    query: 'farcaster miniapp protocol builders neynar base x402',
+    query: 'farcaster client',
     fallback: 'trending',
     accent: 'Product velocity'
   },

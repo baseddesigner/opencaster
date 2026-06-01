@@ -2,19 +2,16 @@ const { ProviderError } = require('../lib/errors')
 
 function createHypersnapClient({
   baseUrl = 'https://haatz.quilibrium.com',
+  publicFarcasterBaseUrl = 'https://api.farcaster.xyz',
   viewerFid = 1325,
   fetchImpl = global.fetch,
   timeoutMs = 8000
 } = {}) {
   if (!fetchImpl) throw new Error('fetch implementation is required')
   const cleanBaseUrl = String(baseUrl || 'https://haatz.quilibrium.com').replace(/\/+$/, '')
+  const cleanPublicFarcasterBaseUrl = String(publicFarcasterBaseUrl || 'https://api.farcaster.xyz').replace(/\/+$/, '')
 
-  async function request(path, params = {}) {
-    const url = new URL(path, cleanBaseUrl)
-    for (const [key, value] of Object.entries(params || {})) {
-      if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
-    }
-
+  async function requestUrl(url) {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
     try {
@@ -42,6 +39,27 @@ function createHypersnapClient({
     } finally {
       clearTimeout(timer)
     }
+  }
+
+  async function requestFrom(base, path, params = {}) {
+    const url = new URL(path, base)
+    for (const [key, value] of Object.entries(params || {})) {
+      if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
+    }
+    return requestUrl(url)
+  }
+
+  async function request(path, params = {}) {
+    return requestFrom(cleanBaseUrl, path, params)
+  }
+
+  async function requestPublicFarcaster(path, params = {}) {
+    return requestFrom(cleanPublicFarcasterBaseUrl, path, params)
+  }
+
+  function hasCasts(payload = {}) {
+    const casts = payload.casts || payload.result?.casts || payload.feed
+    return Array.isArray(casts) && casts.length > 0
   }
 
   async function fallbackToViewerFeed({ limit = 20, cursor } = {}) {
@@ -79,7 +97,9 @@ function createHypersnapClient({
       return request('/v2/farcaster/cast/conversation', { identifier: hash, type: 'hash', reply_depth: 2 })
     },
     async searchCasts(query, { limit = 20, cursor } = {}) {
-      return request('/v2/farcaster/cast/search', { q: query, limit, cursor })
+      const payload = await request('/v2/farcaster/cast/search', { q: query, limit, cursor })
+      if (hasCasts(payload)) return payload
+      return requestPublicFarcaster('/v2/search-casts', { q: query, limit, cursor })
     },
     async searchUsers(query, { limit = 20, cursor } = {}) {
       return request('/v2/farcaster/user/search', { q: query, limit, cursor })

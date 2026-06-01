@@ -10,7 +10,7 @@ test('Hypersnap client sends no auth headers and maps configured endpoints', asy
     timeoutMs: 1000,
     fetchImpl: async (url, options = {}) => {
       calls.push({ url, options })
-      return { ok: true, status: 200, json: async () => ({ casts: [], next: { cursor: 'next-1' } }) }
+      return { ok: true, status: 200, json: async () => ({ casts: [{ hash: '0xfeed' }], next: { cursor: 'next-1' } }) }
     }
   })
 
@@ -21,6 +21,28 @@ test('Hypersnap client sends no auth headers and maps configured endpoints', asy
   assert.equal(calls[0].options.headers.accept, 'application/json')
   assert.equal(calls[0].options.headers['x-api-key'], undefined)
   assert.equal(calls[0].options.headers.authorization, undefined)
+})
+
+test('Hypersnap cast search falls back to public Farcaster search when Hypersnap returns no casts', async () => {
+  const calls = []
+  const client = createHypersnapClient({
+    baseUrl: 'https://haatz.example',
+    publicFarcasterBaseUrl: 'https://api.example',
+    timeoutMs: 1000,
+    fetchImpl: async (url, options = {}) => {
+      calls.push({ url, options })
+      if (url.startsWith('https://haatz.example/')) return { ok: true, status: 200, json: async () => ({ casts: [] }) }
+      return { ok: true, status: 200, json: async () => ({ result: { casts: [{ hash: '0xpublic' }] } }) }
+    }
+  })
+
+  const result = await client.searchCasts('farcaster client', { limit: 9, cursor: 'c1' })
+  assert.equal(result.result.casts[0].hash, '0xpublic')
+  assert.deepEqual(calls.map((call) => call.url), [
+    'https://haatz.example/v2/farcaster/cast/search?q=farcaster+client&limit=9&cursor=c1',
+    'https://api.example/v2/search-casts?q=farcaster+client&limit=9&cursor=c1'
+  ])
+  assert.equal(calls[1].options.headers.authorization, undefined)
 })
 
 test('Hypersnap client supports user, cast, search, feed, and diagnostics methods', async () => {
