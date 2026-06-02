@@ -148,6 +148,7 @@ If you find a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Project docs
 
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — public roadmap for Feed Lab, Provider Platform, and Open Source Readiness.
 - [`docs/GOAL-production-ready-farcaster-client.md`](docs/GOAL-production-ready-farcaster-client.md) — implementation target and acceptance gates.
 - [`docs/UI-ITERATIONS.md`](docs/UI-ITERATIONS.md) — visual iterations and UI rubric.
 - [`docs/PRODUCTION-CHECKLIST.md`](docs/PRODUCTION-CHECKLIST.md) — production readiness gates.
