@@ -1,4 +1,5 @@
 const { ProviderError } = require('../lib/errors')
+const { normalizeHttpsBaseUrl } = require('../lib/url')
 
 function createHypersnapClient({
   baseUrl = 'https://haatz.quilibrium.com',
@@ -25,7 +26,7 @@ function createHypersnapClient({
     }
   }
 
-  async function requestUrl(url) {
+  async function requestUrl(url, { validateShape = true } = {}) {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
     const startedAt = now()
@@ -48,7 +49,7 @@ function createHypersnapClient({
         const shape = assessResponseShape(url, payload, iso(finishedAt))
         health.responseShapeHealth = shape
         health.upstreamLatencyMs = Math.max(0, finishedAt - startedAt)
-        if (shape.status === 'error') {
+        if (validateShape && shape.status === 'error') {
           recordError(shape.message, 502, finishedAt)
           throw new ProviderError(shape.message, { status: 502 })
         }
@@ -77,20 +78,20 @@ function createHypersnapClient({
     }
   }
 
-  async function requestFrom(base, path, params = {}) {
+  async function requestFrom(base, path, params = {}, options = {}) {
     const url = new URL(path, base)
     for (const [key, value] of Object.entries(params || {})) {
       if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
     }
-    return requestUrl(url)
+    return requestUrl(url, options)
   }
 
-  async function request(path, params = {}) {
-    return requestFrom(cleanBaseUrl, path, params)
+  async function request(path, params = {}, options = {}) {
+    return requestFrom(cleanBaseUrl, path, params, options)
   }
 
-  async function requestPublicFarcaster(path, params = {}) {
-    return requestFrom(cleanPublicFarcasterBaseUrl, path, params)
+  async function requestPublicFarcaster(path, params = {}, options = {}) {
+    return requestFrom(cleanPublicFarcasterBaseUrl, path, params, options)
   }
 
   function hasCasts(payload = {}) {
@@ -133,7 +134,7 @@ function createHypersnapClient({
       return request('/v2/farcaster/cast/conversation', { identifier: hash, type: 'hash', reply_depth: 2 })
     },
     async searchCasts(query, { limit = 20, cursor } = {}) {
-      const payload = await request('/v2/farcaster/cast/search', { q: query, limit, cursor })
+      const payload = await request('/v2/farcaster/cast/search', { q: query, limit, cursor }, { validateShape: false })
       if (hasCasts(payload)) return payload
       return requestPublicFarcaster('/v2/search-casts', { q: query, limit, cursor })
     },
@@ -182,12 +183,6 @@ function createHypersnapClient({
       responseShapeHealth: { ...health.responseShapeHealth }
     }
   }
-}
-
-function normalizeHttpsBaseUrl(value, label) {
-  const parsed = new URL(String(value || ''))
-  if (parsed.protocol !== 'https:') throw new Error(`${label} must use https.`)
-  return parsed.toString().replace(/\/+$/, '')
 }
 
 function assessResponseShape(url, payload, checkedAt) {

@@ -52,6 +52,27 @@ test('Hypersnap cast search falls back to public Farcaster search when Hypersnap
   assert.equal(calls[1].options.headers.authorization, undefined)
 })
 
+test('Hypersnap cast search falls back when primary search shape drifts', async () => {
+  const calls = []
+  const client = createHypersnapClient({
+    baseUrl: 'https://haatz.example',
+    publicFarcasterBaseUrl: 'https://api.example',
+    timeoutMs: 1000,
+    fetchImpl: async (url) => {
+      calls.push(url)
+      if (url.startsWith('https://haatz.example/')) return { ok: true, status: 200, json: async () => ({ result: {} }) }
+      return { ok: true, status: 200, json: async () => ({ casts: [{ hash: '0xpublic' }] }) }
+    }
+  })
+
+  const result = await client.searchCasts('protocol', { limit: 3 })
+  assert.equal(result.casts[0].hash, '0xpublic')
+  assert.deepEqual(calls, [
+    'https://haatz.example/v2/farcaster/cast/search?q=protocol&limit=3',
+    'https://api.example/v2/search-casts?q=protocol&limit=3'
+  ])
+})
+
 test('Hypersnap client supports user, cast, search, feed, and diagnostics methods', async () => {
   const seen = []
   const client = createHypersnapClient({

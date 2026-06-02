@@ -1,6 +1,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { z } = require('zod')
+const { normalizeHttpsBaseUrl } = require('./lib/url')
 
 const DEFAULT_FEED_PRESETS_FILE = path.join(__dirname, '..', 'config', 'feed-presets.json')
 const FEED_ALIASES = {
@@ -48,12 +49,14 @@ function parseList(value) {
 }
 
 function normalizeHypersnapBaseUrl(value, allowedHosts) {
-  const parsed = new URL(value)
-  if (parsed.protocol !== 'https:') throw new Error('HYPERSNAP_BASE_URL must use https.')
-  if (!allowedHosts.includes(parsed.hostname.toLowerCase())) {
-    throw new Error('HYPERSNAP_BASE_URL host is not allowed. Add it to HYPERSNAP_ALLOWED_HOSTS to use a custom upstream.')
+  try {
+    return normalizeHttpsBaseUrl(value, 'HYPERSNAP_BASE_URL', { allowedHosts })
+  } catch (err) {
+    if (/host is not allowed/.test(err.message)) {
+      throw new Error('HYPERSNAP_BASE_URL host is not allowed. Add it to HYPERSNAP_ALLOWED_HOSTS to use a custom upstream.')
+    }
+    throw err
   }
-  return parsed.toString().replace(/\/+$/, '')
 }
 
 function parseTrustProxy(value) {

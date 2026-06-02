@@ -1,0 +1,16 @@
+<div class="cast-topline">
+  <a class="cast-author" href="/u/<%= encodeURIComponent(cast.author.username) %>">
+    <img class="avatar" src="<%= cast.author.pfpUrl %>" alt="" loading="lazy">
+    <span>
+      <strong class="author-name"><%= cast.author.displayName %></strong>
+      <span class="muted">@<%= cast.author.username %> · <%= cast.timestampLabel %></span>
+    </span>
+  </a>
+  <% if (showScore) { %>
+    <span class="signal-chip" title="Engagement score"><%= cast.engagementScoreLabel || '0' %></span>
+  <% } %>
+  <% if (showThreadLink) { %>
+    <a class="text-link" href="/cast/<%= encodeURIComponent(cast.hash) %>">Thread</a>
+  <% } %>
+</div>
+<p class="cast-text"><%= cast.text %></p>

@@ -1,15 +1,5 @@
 <article class="cast-card">
-  <div class="cast-topline">
-    <a class="cast-author" href="/u/<%= encodeURIComponent(cast.author.username) %>">
-      <img class="avatar" src="<%= cast.author.pfpUrl %>" alt="" loading="lazy">
-      <span>
-        <strong class="author-name"><%= cast.author.displayName %></strong>
-        <span class="muted">@<%= cast.author.username %> · <%= cast.timestampLabel %></span>
-      </span>
-    </a>
-    <span class="signal-chip" title="Engagement score"><%= cast.engagementScoreLabel || '0' %></span>
-  </div>
-  <p class="cast-text"><%= cast.text %></p>
+  <%- include('./cast-summary', { cast, showScore: true, showThreadLink: false }) %>
   <% if (cast.whyShown) { %>
     <p class="why-shown"><span>Why shown</span><%= cast.whyShown %></p>
   <% } %>

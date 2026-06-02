@@ -268,6 +268,32 @@ test('feed lab renders explainable ranking modes', async () => {
   assert.ok(replies.text.indexOf('reply-heavy cast') < replies.text.indexOf('like-heavy cast'))
 })
 
+test('feed lab rejects unknown feed ids instead of silently defaulting', async () => {
+  const app = createApp({ provider: mockProvider(), config: baseConfig })
+  const res = await request(app).get('/lab?feed=nope').expect(404)
+  assert.match(res.text, /Feed not found/)
+})
+
+test('feed and lab reuse cached provider payloads across presentation modes', async () => {
+  let fetches = 0
+  const app = createApp({
+    provider: mockProvider({
+      fetchFeed: async () => {
+        fetches += 1
+        return {
+          casts: [{ hash: '0xaaaabbbb', text: 'shared feed cast', author: { username: 'alice' } }],
+          nextCursor: null
+        }
+      }
+    }),
+    config: baseConfig
+  })
+
+  await request(app).get('/feed/builders').expect(200)
+  await request(app).get('/lab?feed=builders').expect(200)
+  assert.equal(fetches, 1)
+})
+
 test('feed lab renders setup state when provider is unavailable', async () => {
   const app = createApp({
     config: { nodeEnv: 'production', provider: 'neynar', defaultFeed: 'builders', apiKey: '', cacheTtlSeconds: 60, providerReady: false, isLiveProvider: true, providerSetupMessage: 'NEYNAR_API_KEY is missing.' }

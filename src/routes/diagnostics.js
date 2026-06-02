@@ -23,7 +23,7 @@ function registerDiagnosticsRoutes(app, ctx) {
   })
 
   app.get('/diagnostics', async (req, res) => {
-    const diagnostics = await withHealthProbe(buildDiagnostics({ config: ctx.config, provider: ctx.provider }), ctx.provider)
+    const diagnostics = buildDiagnostics({ config: ctx.config, provider: ctx.provider })
     res.status(diagnostics.ok ? 200 : 503).render('pages/diagnostics', {
       title: 'Production diagnostics',
       active: 'diagnostics',

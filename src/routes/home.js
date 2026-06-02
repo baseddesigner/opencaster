@@ -6,10 +6,10 @@ function registerHomeRoutes(app, ctx) {
   app.get('/feed/:feedId', (req, res, next) => renderFeed(req, res, next, ctx, req.params.feedId))
 }
 
-async function loadFeedPayload({ ctx, feed, feedId, rank, cursor }) {
+async function loadFeedPayload({ ctx, feed, feedId, cursor }) {
   const ttl = ctx.config.cacheTtlSeconds * 1000
-  const primaryKey = `feed:${ctx.provider.name}:${feedId}:${rank}:${cursor}`
-  const fallbackKey = `feed:${ctx.provider.name}:fallback:${feedId}:${rank}:${cursor}`
+  const primaryKey = `feed:${ctx.provider.name}:${feedId}:${feed.mode}:${feed.query || ''}:${cursor}`
+  const fallbackKey = `feed:${ctx.provider.name}:fallback:${feedId}:${feed.fallback || ''}:${cursor}`
   const loadFallback = async () => {
     if (ctx.provider.fetchUserCasts) return ctx.provider.fetchUserCasts({ limit: 20, cursor })
     return ctx.provider.fetchTrendingFeed({ limit: 20, cursor })
@@ -63,7 +63,7 @@ async function renderFeed(req, res, next, ctx, feedId) {
   try {
     const cursor = req.query.cursor || ''
     const rank = req.query.rank === 'recent' ? 'recent' : 'signal'
-    const normalized = await loadFeedPayload({ ctx, feed, feedId: resolvedFeedId, rank, cursor })
+    const normalized = await loadFeedPayload({ ctx, feed, feedId: resolvedFeedId, cursor })
     const casts = rank === 'recent'
       ? [...normalized.casts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       : [...normalized.casts].sort((a, b) => b.engagementScore - a.engagementScore)

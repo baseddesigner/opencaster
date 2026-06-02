@@ -60,17 +60,7 @@
               <small><%= modes[mode].label %></small>
             </div>
             <div class="lab-card-body">
-              <div class="cast-topline">
-                <a class="cast-author" href="/u/<%= encodeURIComponent(cast.author.username) %>">
-                  <img class="avatar" src="<%= cast.author.pfpUrl %>" alt="" loading="lazy">
-                  <span>
-                    <strong class="author-name"><%= cast.author.displayName %></strong>
-                    <span class="muted">@<%= cast.author.username %> · <%= cast.timestampLabel %></span>
-                  </span>
-                </a>
-                <a class="text-link" href="/cast/<%= encodeURIComponent(cast.hash) %>">Thread</a>
-              </div>
-              <p class="cast-text"><%= cast.text %></p>
+              <%- include('../partials/cast-summary', { cast, showScore: false, showThreadLink: true }) %>
               <div class="score-grid" aria-label="Score breakdown">
                 <% cast.labBreakdown.forEach((item) => { %>
                   <div class="<%= item.mode === mode ? 'active' : '' %>">

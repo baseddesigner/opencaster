@@ -1,3 +1,4 @@
+const { AppError } = require('./errors')
 const { normalizeFeedResponse } = require('./view-models')
 
 const STOPWORDS = new Set([
@@ -29,16 +30,21 @@ function withWhy(casts = [], whyShown) {
   return casts.map((cast) => ({ ...cast, whyShown }))
 }
 
+function discoveryFetchLimit(limit, excludeSize = 0, cushion = 3) {
+  return Math.min(limit + excludeSize + cushion, 25)
+}
+
 async function loadAuthorRecentCasts(ctx, cast, { limit = 4, excludeHashes = new Set() } = {}) {
   const fid = cast?.author?.fid
   const username = cast?.author?.username || ''
   if (!fid && !username) return []
 
+  const fetchLimit = discoveryFetchLimit(limit, excludeHashes.size, 1)
   const cacheKey = `discovery-author:${ctx.provider.name}:${fid || username}:${limit}`
   const payload = await ctx.cache.cached(cacheKey, ctx.config.cacheTtlSeconds * 1000, async () => {
-    if (fid && ctx.provider.fetchUserCasts) return ctx.provider.fetchUserCasts({ fid, limit: limit + excludeHashes.size + 1 })
-    if (fid && ctx.provider.fetchFeed) return ctx.provider.fetchFeed({ fid, limit: limit + excludeHashes.size + 1 })
-    return ctx.provider.searchCasts(username, { limit: limit + excludeHashes.size + 1 })
+    if (fid && ctx.provider.fetchUserCasts) return ctx.provider.fetchUserCasts({ fid, limit: fetchLimit })
+    if (fid && ctx.provider.fetchFeed) return ctx.provider.fetchFeed({ fid, limit: fetchLimit })
+    return ctx.provider.searchCasts(username, { limit: fetchLimit })
   })
 
   return withWhy(
@@ -55,9 +61,10 @@ async function loadRelatedCasts(ctx, cast, { limit = 4, excludeHashes = new Set(
   const query = terms.join(' ') || cast?.author?.username || ''
   if (!query) return { query: '', casts: [] }
 
+  const fetchLimit = discoveryFetchLimit(limit, excludeHashes.size)
   const cacheKey = `discovery-related:${ctx.provider.name}:${query}:${limit}`
   const payload = await ctx.cache.cached(cacheKey, ctx.config.cacheTtlSeconds * 1000, async () => {
-    return ctx.provider.searchCasts(query, { limit: limit + excludeHashes.size + 3 })
+    return ctx.provider.searchCasts(query, { limit: fetchLimit })
   })
 
   const casts = normalizeFeedResponse(payload).casts
@@ -130,7 +137,8 @@ async function buildProfileDiscovery(ctx, { profile, casts = [] }) {
 async function optionalDiscovery(loader, fallback = []) {
   try {
     return await loader()
-  } catch (_) {
+  } catch (err) {
+    if (!(err instanceof AppError)) throw err
     return fallback
   }
 }
@@ -147,6 +155,9 @@ module.exports = {
   extractDiscoveryTerms,
   buildCastDiscovery,
   buildProfileDiscovery,
+  discoveryFetchLimit,
+  emptyCastDiscovery,
+  emptyProfileDiscovery,
   loadAuthorRecentCasts,
   loadRelatedCasts
 }

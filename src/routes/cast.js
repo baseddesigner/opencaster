@@ -1,7 +1,7 @@
 const { normalizeCastThread } = require('../lib/view-models')
 const { composeUrl } = require('../lib/intent-urls')
 const { parseCastHash } = require('../lib/params')
-const { buildCastDiscovery } = require('../lib/discovery')
+const { buildCastDiscovery, emptyCastDiscovery } = require('../lib/discovery')
 
 function registerCastRoutes(app, ctx) {
   app.get('/cast/:hash', async (req, res) => {
@@ -12,7 +12,7 @@ function registerCastRoutes(app, ctx) {
         cast: null,
         parent: null,
         replies: [],
-        discovery: emptyDiscovery(),
+        discovery: emptyCastDiscovery(),
         replyUrl: composeUrl(''),
         setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.',
         errorMessage: ''
@@ -41,17 +41,13 @@ function registerCastRoutes(app, ctx) {
         cast: null,
         parent: null,
         replies: [],
-        discovery: emptyDiscovery(),
+        discovery: emptyCastDiscovery(),
         replyUrl: composeUrl(''),
         setupMessage: '',
         errorMessage: err.message || 'Couldn’t find that cast.'
       })
     }
   })
-}
-
-function emptyDiscovery() {
-  return { authorRecent: [], relatedCasts: [], relatedQuery: '', embeds: [], context: { parentWhy: '', repliesWhy: '' } }
 }
 
 module.exports = { registerCastRoutes }

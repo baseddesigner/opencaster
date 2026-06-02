@@ -1,6 +1,6 @@
 const { toProfileCard, normalizeFeedResponse } = require('../lib/view-models')
 const { parseFid, parseUsername } = require('../lib/params')
-const { buildProfileDiscovery } = require('../lib/discovery')
+const { buildProfileDiscovery, emptyProfileDiscovery } = require('../lib/discovery')
 
 function registerProfileRoutes(app, ctx) {
   app.get('/u/:username', (req, res) => renderProfile(req, res, ctx, { username: req.params.username }))
@@ -14,7 +14,7 @@ async function renderProfile(req, res, ctx, target) {
       active: 'profile',
       profile: null,
       casts: [],
-      discovery: emptyDiscovery(),
+      discovery: emptyProfileDiscovery(),
       setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.',
       errorMessage: ''
     })
@@ -45,15 +45,11 @@ async function renderProfile(req, res, ctx, target) {
       active: 'profile',
       profile: null,
       casts: [],
-      discovery: emptyDiscovery(),
+      discovery: emptyProfileDiscovery(),
       setupMessage: '',
       errorMessage: err.message || 'Couldn’t find that profile.'
     })
   }
-}
-
-function emptyDiscovery() {
-  return { relatedQuery: '', relatedCasts: [], recentWhy: '' }
 }
 
 module.exports = { registerProfileRoutes }
