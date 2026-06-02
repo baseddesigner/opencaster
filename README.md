@@ -137,6 +137,7 @@ If you find a vulnerability, see [SECURITY.md](SECURITY.md).
 - [`docs/GOAL-production-ready-farcaster-client.md`](docs/GOAL-production-ready-farcaster-client.md) — implementation target and acceptance gates.
 - [`docs/UI-ITERATIONS.md`](docs/UI-ITERATIONS.md) — visual iterations and UI rubric.
 - [`docs/PRODUCTION-CHECKLIST.md`](docs/PRODUCTION-CHECKLIST.md) — production readiness gates.
+- [`docs/architecture/provider-contract.md`](docs/architecture/provider-contract.md) — provider interface, response shapes, errors, diagnostics, and tests.
 - [`docs/research/snapchain-cassie-2026-05-27/`](docs/research/snapchain-cassie-2026-05-27/) — Cassie/Hypersnap/Snapchain research.
 
 ## Contributing

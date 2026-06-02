@@ -30,6 +30,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [x] Real provider integration can be enabled later via config/credentials only.
 - [x] Routes depend on provider methods + view models, not raw provider payloads.
 - [x] Provider keys stay server-side.
+- [x] Provider contract is documented in `docs/architecture/provider-contract.md`.
 
 ## Security
 
