@@ -12,19 +12,79 @@
     <% if (setupMessage) { %><%- include('../partials/empty-state', { message: setupMessage }) %><% } %>
     <% if (errorMessage) { %><%- include('../partials/error-state', { message: errorMessage }) %><% } %>
     <% if (cast) { %>
-      <p class="eyebrow">Thread reader</p>
+      <p class="eyebrow">Discovery context</p>
       <% if (parent) { %>
-        <section class="parent-context" aria-label="Parent context">
-          <div class="section-head"><h2>Parent context</h2><a class="text-link" href="/cast/<%= encodeURIComponent(parent.hash) %>"><%= parent.hash %></a></div>
+        <section class="discovery-module parent-context" aria-label="Parent context">
+          <div class="section-head">
+            <div>
+              <h2>Parent context</h2>
+              <% if (discovery.context.parentWhy) { %><p class="module-note"><%= discovery.context.parentWhy %></p><% } %>
+            </div>
+            <a class="text-link" href="/cast/<%= encodeURIComponent(parent.hash) %>"><%= parent.hash %></a>
+          </div>
           <%- include('../partials/feed-card', { cast: parent }) %>
         </section>
       <% } %>
       <%- include('../partials/feed-card', { cast }) %>
+      <% if (discovery.embeds.length) { %>
+        <section class="discovery-module" aria-label="Links and embeds">
+          <div class="section-head">
+            <div>
+              <h2>Links and embeds</h2>
+              <p class="module-note">External context attached to the selected cast.</p>
+            </div>
+            <span class="pill"><%= discovery.embeds.length %> surfaced</span>
+          </div>
+          <div class="link-grid">
+            <% discovery.embeds.forEach((embed) => { %>
+              <a class="link-card" href="<%= embed.url %>" target="_blank" rel="noopener noreferrer">
+                <span>Why shown</span>
+                <strong><%= embed.label %></strong>
+                <small><%= embed.whyShown %></small>
+              </a>
+            <% }) %>
+          </div>
+        </section>
+      <% } %>
       <div class="actions block"><a href="<%= replyUrl %>" target="_blank" rel="noopener noreferrer">Reply in Farcaster</a></div>
-      <div class="section-head"><h2>Replies</h2><span class="pill"><%= replies.length %> loaded</span></div>
-      <section class="feed-list replies">
+      <section class="discovery-module" aria-label="Reply context">
+        <div class="section-head">
+          <div>
+            <h2>Reply context</h2>
+            <% if (discovery.context.repliesWhy) { %><p class="module-note"><%= discovery.context.repliesWhy %></p><% } %>
+          </div>
+          <span class="pill"><%= replies.length %> loaded</span>
+        </div>
+        <div class="feed-list replies">
         <% replies.forEach((reply) => { %><%- include('../partials/feed-card', { cast: reply }) %><% }) %>
         <% if (!replies.length) { %><%- include('../partials/empty-state', { message: 'No replies loaded.' }) %><% } %>
+        </div>
+      </section>
+      <section class="discovery-module" aria-label="Author recent casts">
+        <div class="section-head">
+          <div>
+            <h2>Author's recent casts</h2>
+            <p class="module-note">More from @<%= cast.author.username %>, excluding the selected cast and loaded thread context.</p>
+          </div>
+          <a class="text-link" href="/u/<%= encodeURIComponent(cast.author.username) %>">Open profile</a>
+        </div>
+        <div class="feed-list compact-feed">
+          <% discovery.authorRecent.forEach((item) => { %><%- include('../partials/feed-card', { cast: item }) %><% }) %>
+          <% if (!discovery.authorRecent.length) { %><%- include('../partials/empty-state', { message: 'No additional recent casts loaded for this author.' }) %><% } %>
+        </div>
+      </section>
+      <section class="discovery-module" aria-label="Related casts">
+        <div class="section-head">
+          <div>
+            <h2>Related casts</h2>
+            <% if (discovery.relatedQuery) { %><p class="module-note">Search query: <code><%= discovery.relatedQuery %></code></p><% } %>
+          </div>
+          <% if (discovery.relatedQuery) { %><a class="text-link" href="/search?q=<%= encodeURIComponent(discovery.relatedQuery) %>&type=casts">Open search</a><% } %>
+        </div>
+        <div class="feed-list compact-feed">
+          <% discovery.relatedCasts.forEach((item) => { %><%- include('../partials/feed-card', { cast: item }) %><% }) %>
+          <% if (!discovery.relatedCasts.length) { %><%- include('../partials/empty-state', { message: 'No related casts loaded.' }) %><% } %>
+        </div>
       </section>
     <% } %>
   </main>

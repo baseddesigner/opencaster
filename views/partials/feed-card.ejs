@@ -10,6 +10,9 @@
     <span class="signal-chip" title="Engagement score"><%= cast.engagementScoreLabel || '0' %></span>
   </div>
   <p class="cast-text"><%= cast.text %></p>
+  <% if (cast.whyShown) { %>
+    <p class="why-shown"><span>Why shown</span><%= cast.whyShown %></p>
+  <% } %>
   <% if (cast.embeds && cast.embeds.length) { %>
     <div class="embeds">
       <% cast.embeds.forEach((embed) => { %>

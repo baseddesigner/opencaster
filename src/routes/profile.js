@@ -1,5 +1,6 @@
 const { toProfileCard, normalizeFeedResponse } = require('../lib/view-models')
 const { parseFid, parseUsername } = require('../lib/params')
+const { buildProfileDiscovery } = require('../lib/discovery')
 
 function registerProfileRoutes(app, ctx) {
   app.get('/u/:username', (req, res) => renderProfile(req, res, ctx, { username: req.params.username }))
@@ -13,6 +14,7 @@ async function renderProfile(req, res, ctx, target) {
       active: 'profile',
       profile: null,
       casts: [],
+      discovery: emptyDiscovery(),
       setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.',
       errorMessage: ''
     })
@@ -35,17 +37,23 @@ async function renderProfile(req, res, ctx, target) {
     } catch (_) {
       casts = []
     }
-    res.render('pages/profile', { title: profile.displayName, active: 'profile', profile, casts, setupMessage: '', errorMessage: '' })
+    const discovery = await buildProfileDiscovery(ctx, { profile, casts })
+    res.render('pages/profile', { title: profile.displayName, active: 'profile', profile, casts, discovery, setupMessage: '', errorMessage: '' })
   } catch (err) {
     res.status(err.status || 404).render('pages/profile', {
       title: 'Profile not found',
       active: 'profile',
       profile: null,
       casts: [],
+      discovery: emptyDiscovery(),
       setupMessage: '',
       errorMessage: err.message || 'Couldn’t find that profile.'
     })
   }
+}
+
+function emptyDiscovery() {
+  return { relatedQuery: '', relatedCasts: [], recentWhy: '' }
 }
 
 module.exports = { registerProfileRoutes }

@@ -50,7 +50,7 @@ test('demo mode renders usable pages with no env vars or injected provider', asy
   assert.match((await request(app).get('/feed/agents').expect(200)).text, /Agents/)
   assert.match((await request(app).get('/u/clawlinker').expect(200)).text, /Agent building/)
   assert.match((await request(app).get('/fid/22945').expect(200)).text, /clawlinker/)
-  assert.match((await request(app).get('/cast/demo-001').expect(200)).text, /Replies/)
+  assert.match((await request(app).get('/cast/demo-001').expect(200)).text, /Reply context/)
   assert.match((await request(app).get('/search?q=x402&type=casts').expect(200)).text, /x402/)
   assert.match((await request(app).get('/search?q=max&type=users').expect(200)).text, /baseddesigner/)
 })
@@ -161,6 +161,63 @@ test('profile route uses authored casts provider method instead of username sear
   const res = await request(app).get('/u/alice').expect(200)
   assert.deepEqual(calls, [{ fid: 42, limit: 10 }])
   assert.match(res.text, /authored cast/)
+})
+
+test('cast route renders discovery modules with author, related, parent, replies, embeds, and why metadata', async () => {
+  const calls = []
+  const app = createApp({
+    provider: mockProvider({
+      fetchCastByHash: async (hash) => ({
+        cast: {
+          hash,
+          text: 'Hypersnap protocol clients need better context',
+          author: { fid: 42, username: 'alice' },
+          embeds: [{ url: 'https://example.com/context', title: 'Context link' }]
+        },
+        parent: { hash: '0xparent12', text: 'parent cast', author: { username: 'parent' } },
+        replies: [{ hash: '0xreply123', text: 'reply cast', author: { username: 'bob' } }]
+      }),
+      fetchUserCasts: async ({ fid }) => {
+        calls.push(['author', fid])
+        return { casts: [{ hash: '0xauthor12', text: 'author recent cast', author: { username: 'alice' } }] }
+      },
+      searchCasts: async (query) => {
+        calls.push(['related', query])
+        return { casts: [{ hash: '0xrelated1', text: 'related cast', author: { username: 'carol' } }] }
+      }
+    }),
+    config: baseConfig
+  })
+
+  const res = await request(app).get('/cast/0xabcdef12').expect(200)
+  assert.match(res.text, /Parent context/)
+  assert.match(res.text, /Reply context/)
+  assert.match(res.text, /Links and embeds/)
+  assert.match(res.text, /Author's recent casts/)
+  assert.match(res.text, /Related casts/)
+  assert.match(res.text, /Why shown/)
+  assert.match(res.text, /Linked or embedded in this cast/)
+  assert.match(res.text, /author recent cast/)
+  assert.match(res.text, /related cast/)
+  assert.deepEqual(calls[0], ['author', 42])
+})
+
+test('profile route renders explainable recent and related discovery modules', async () => {
+  const app = createApp({
+    provider: mockProvider({
+      fetchUserByUsername: async () => ({ fid: 42, username: 'alice', display_name: 'Alice', bio: 'Hypersnap protocol client context' }),
+      fetchUserCasts: async () => ({ casts: [{ hash: '0xauthored1', text: 'authored protocol cast', author: { username: 'alice' } }] }),
+      searchCasts: async () => ({ casts: [{ hash: '0xrelated1', text: 'related protocol cast', author: { username: 'bob' } }] })
+    }),
+    config: baseConfig
+  })
+
+  const res = await request(app).get('/u/alice').expect(200)
+  assert.match(res.text, /Author's recent casts/)
+  assert.match(res.text, /Authored by @alice/)
+  assert.match(res.text, /Related casts/)
+  assert.match(res.text, /related protocol cast/)
+  assert.match(res.text, /Why shown/)
 })
 
 test('routes reject invalid path/query params before provider calls', async () => {
