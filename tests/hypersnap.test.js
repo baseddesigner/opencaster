@@ -125,3 +125,51 @@ test('Hypersnap healthCheck reports degraded upstream instead of unconditional r
   assert.equal(health.ready, false)
   assert.equal(health.status, 503)
 })
+
+test('Hypersnap diagnostics track latency, success time, base URL, and shape health', async () => {
+  let clock = Date.parse('2026-06-02T12:00:00.000Z')
+  const client = createHypersnapClient({
+    baseUrl: 'https://haatz.example/',
+    fetchImpl: async () => {
+      clock += 42
+      return { ok: true, status: 200, json: async () => ({ version: 'test-node' }) }
+    },
+    now: () => clock
+  })
+
+  const health = await client.healthCheck()
+  const diagnostics = client.diagnostics()
+  assert.equal(health.ready, true)
+  assert.equal(health.upstreamLatencyMs, 42)
+  assert.equal(diagnostics.baseUrl, 'https://haatz.example')
+  assert.equal(diagnostics.upstreamLatencyMs, 42)
+  assert.equal(diagnostics.lastSuccessAt, '2026-06-02T12:00:00.042Z')
+  assert.equal(diagnostics.lastErrorAt, '')
+  assert.deepEqual(diagnostics.responseShapeHealth, {
+    status: 'ok',
+    endpoint: '/v1/info',
+    checkedAt: '2026-06-02T12:00:00.042Z',
+    message: 'Hypersnap response shape matched expected /v1/info object.'
+  })
+})
+
+test('Hypersnap diagnostics keep last error and response-shape failures', async () => {
+  let clock = Date.parse('2026-06-02T12:00:00.000Z')
+  const client = createHypersnapClient({
+    baseUrl: 'https://haatz.example',
+    fetchImpl: async () => {
+      clock += 9
+      return { ok: true, status: 200, json: async () => [] }
+    },
+    now: () => clock
+  })
+
+  const health = await client.healthCheck()
+  const diagnostics = client.diagnostics()
+  assert.equal(health.ready, false)
+  assert.equal(health.status, 502)
+  assert.equal(diagnostics.lastErrorAt, '2026-06-02T12:00:00.009Z')
+  assert.equal(diagnostics.lastError, 'Hypersnap response shape did not match expected /v1/info object.')
+  assert.equal(diagnostics.responseShapeHealth.status, 'error')
+  assert.equal(diagnostics.responseShapeHealth.endpoint, '/v1/info')
+})

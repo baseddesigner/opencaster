@@ -17,6 +17,20 @@
       <article><span>Writes</span><strong>disabled</strong><p>Outbound links only; no signer custody.</p></article>
       <article><span>Proxy</span><strong>none</strong><p>Explicit routes only; no generic provider proxy.</p></article>
     </section>
+    <% if (diagnostics.provider.baseUrl || diagnostics.provider.upstreamLatencyMs !== undefined || diagnostics.provider.responseShapeHealth) { %>
+      <h2>Provider telemetry</h2>
+      <section class="diagnostic-grid">
+        <% if (diagnostics.provider.baseUrl) { %>
+          <article><span>Active base URL</span><strong class="diagnostic-url"><%= diagnostics.provider.baseUrl %></strong><p>Server-side upstream only.</p></article>
+        <% } %>
+        <article><span>Upstream latency</span><strong><%= diagnostics.provider.upstreamLatencyMs === null || diagnostics.provider.upstreamLatencyMs === undefined ? 'unknown' : `${diagnostics.provider.upstreamLatencyMs}ms` %></strong><p>Last measured provider round trip.</p></article>
+        <article><span>Last success</span><strong><%= diagnostics.provider.lastSuccessAt || 'none yet' %></strong><p>Most recent successful upstream response.</p></article>
+        <article><span>Last error</span><strong><%= diagnostics.provider.lastErrorAt || 'none' %></strong><p><%= diagnostics.provider.lastError || 'No current provider error.' %></p></article>
+        <% if (diagnostics.provider.responseShapeHealth) { %>
+          <article><span>Response shape</span><strong><%= diagnostics.provider.responseShapeHealth.status %></strong><p><%= diagnostics.provider.responseShapeHealth.message %></p></article>
+        <% } %>
+      </section>
+    <% } %>
     <h2>Checklist gates</h2>
     <ul class="check-list">
       <% Object.entries(diagnostics.security).forEach(([key, value]) => { %>

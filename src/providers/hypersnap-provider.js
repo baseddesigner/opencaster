@@ -5,15 +5,30 @@ function createHypersnapClient({
   publicFarcasterBaseUrl = 'https://api.farcaster.xyz',
   viewerFid = 1325,
   fetchImpl = global.fetch,
-  timeoutMs = 8000
+  timeoutMs = 8000,
+  now = Date.now
 } = {}) {
   if (!fetchImpl) throw new Error('fetch implementation is required')
   const cleanBaseUrl = normalizeHttpsBaseUrl(baseUrl || 'https://haatz.quilibrium.com', 'Hypersnap base URL')
   const cleanPublicFarcasterBaseUrl = normalizeHttpsBaseUrl(publicFarcasterBaseUrl || 'https://api.farcaster.xyz', 'Public Farcaster base URL')
+  const health = {
+    baseUrl: cleanBaseUrl,
+    upstreamLatencyMs: null,
+    lastSuccessAt: '',
+    lastErrorAt: '',
+    lastError: '',
+    responseShapeHealth: {
+      status: 'unknown',
+      endpoint: '',
+      checkedAt: '',
+      message: 'No Hypersnap response checked yet.'
+    }
+  }
 
   async function requestUrl(url) {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
+    const startedAt = now()
     try {
       const res = await fetchImpl(url.toString(), {
         headers: {
@@ -23,11 +38,31 @@ function createHypersnapClient({
         signal: controller.signal
       })
       if (!res.ok) {
-        throw new ProviderError(`Hypersnap request failed with status ${res.status}`, { status: res.status })
+        const message = `Hypersnap request failed with status ${res.status}`
+        recordError(message, res.status)
+        throw new ProviderError(message, { status: res.status })
       }
       try {
-        return await res.json()
+        const payload = await res.json()
+        const finishedAt = now()
+        const shape = assessResponseShape(url, payload, iso(finishedAt))
+        health.responseShapeHealth = shape
+        health.upstreamLatencyMs = Math.max(0, finishedAt - startedAt)
+        if (shape.status === 'error') {
+          recordError(shape.message, 502, finishedAt)
+          throw new ProviderError(shape.message, { status: 502 })
+        }
+        recordSuccess(finishedAt)
+        return payload
       } catch (err) {
+        if (err instanceof ProviderError) throw err
+        health.responseShapeHealth = {
+          status: 'error',
+          endpoint: new URL(url.toString()).pathname,
+          checkedAt: iso(now()),
+          message: 'Hypersnap returned malformed JSON.'
+        }
+        recordError('Hypersnap returned malformed JSON.', 502)
         throw new ProviderError('Hypersnap returned malformed JSON.', { cause: err })
       }
     } catch (err) {
@@ -35,6 +70,7 @@ function createHypersnapClient({
       const message = err?.name === 'AbortError'
         ? 'Hypersnap is slow right now. Try again in a minute.'
         : 'Hypersnap data is unavailable right now. Try again in a minute.'
+      recordError(message, err?.name === 'AbortError' ? 504 : 502)
       throw new ProviderError(message, { cause: err })
     } finally {
       clearTimeout(timer)
@@ -107,9 +143,9 @@ function createHypersnapClient({
     async healthCheck() {
       try {
         await request('/v1/info')
-        return { ready: true, status: 200 }
+        return { ready: true, status: 200, ...diagnosticSnapshot() }
       } catch (err) {
-        return { ready: false, status: err.status || 502, message: err.message }
+        return { ready: false, status: err.status || 502, message: err.message, ...diagnosticSnapshot() }
       }
     },
     diagnostics() {
@@ -119,9 +155,31 @@ function createHypersnapClient({
         mode: 'live-provider',
         liveData: true,
         noKeyRequired: true,
-        baseUrl: cleanBaseUrl,
-        viewerFid
+        viewerFid,
+        ...diagnosticSnapshot()
       }
+    }
+  }
+
+  function recordSuccess(timestamp = now()) {
+    health.lastSuccessAt = iso(timestamp)
+    health.lastErrorAt = ''
+    health.lastError = ''
+  }
+
+  function recordError(message, status, timestamp = now()) {
+    health.lastErrorAt = iso(timestamp)
+    health.lastError = message || `Hypersnap request failed with status ${status || 502}`
+  }
+
+  function diagnosticSnapshot() {
+    return {
+      baseUrl: health.baseUrl,
+      upstreamLatencyMs: health.upstreamLatencyMs,
+      lastSuccessAt: health.lastSuccessAt,
+      lastErrorAt: health.lastErrorAt,
+      lastError: health.lastError,
+      responseShapeHealth: { ...health.responseShapeHealth }
     }
   }
 }
@@ -130,6 +188,45 @@ function normalizeHttpsBaseUrl(value, label) {
   const parsed = new URL(String(value || ''))
   if (parsed.protocol !== 'https:') throw new Error(`${label} must use https.`)
   return parsed.toString().replace(/\/+$/, '')
+}
+
+function assessResponseShape(url, payload, checkedAt) {
+  const endpoint = new URL(url.toString()).pathname
+  const ok = (message) => ({ status: 'ok', endpoint, checkedAt, message })
+  const error = (message) => ({ status: 'error', endpoint, checkedAt, message })
+  const isObject = payload && typeof payload === 'object' && !Array.isArray(payload)
+  const hasArray = (...values) => values.some((value) => Array.isArray(value))
+
+  if (endpoint === '/v1/info') {
+    return isObject
+      ? ok('Hypersnap response shape matched expected /v1/info object.')
+      : error('Hypersnap response shape did not match expected /v1/info object.')
+  }
+  if (endpoint.includes('/feed') || endpoint.includes('/cast/search') || endpoint.includes('/search-casts')) {
+    return isObject && hasArray(payload.casts, payload.result?.casts, payload.feed)
+      ? ok('Hypersnap response shape matched expected cast collection.')
+      : error('Hypersnap response shape did not include a cast collection.')
+  }
+  if (endpoint.includes('/user/search')) {
+    return isObject && hasArray(payload.users, payload.result?.users)
+      ? ok('Hypersnap response shape matched expected user collection.')
+      : error('Hypersnap response shape did not include a user collection.')
+  }
+  if (endpoint.includes('/user/by_username') || endpoint.includes('/user/bulk')) {
+    return isObject && (payload.user || payload.result?.user || hasArray(payload.users, payload.result?.users))
+      ? ok('Hypersnap response shape matched expected user payload.')
+      : error('Hypersnap response shape did not include a user payload.')
+  }
+  if (endpoint.includes('/cast/conversation') || endpoint.includes('/cast')) {
+    return isObject && (payload.cast || payload.result?.cast || payload.conversation?.cast)
+      ? ok('Hypersnap response shape matched expected cast payload.')
+      : error('Hypersnap response shape did not include a cast payload.')
+  }
+  return isObject ? ok('Hypersnap response shape was JSON object.') : error('Hypersnap response shape was not a JSON object.')
+}
+
+function iso(value) {
+  return new Date(value).toISOString()
 }
 
 module.exports = { createHypersnapClient }

@@ -8,6 +8,7 @@ async function withHealthProbe(diagnostics, provider) {
     ok: Boolean(health.ready),
     provider: {
       ...diagnostics.provider,
+      ...health,
       ready: Boolean(health.ready),
       healthStatus: health.status || (health.ready ? 200 : 502),
       healthMessage: health.ready ? '' : (health.message || 'Provider health check failed.')
@@ -21,8 +22,8 @@ function registerDiagnosticsRoutes(app, ctx) {
     res.status(diagnostics.ok ? 200 : 503).json(diagnostics)
   })
 
-  app.get('/diagnostics', (req, res) => {
-    const diagnostics = buildDiagnostics({ config: ctx.config, provider: ctx.provider })
+  app.get('/diagnostics', async (req, res) => {
+    const diagnostics = await withHealthProbe(buildDiagnostics({ config: ctx.config, provider: ctx.provider }), ctx.provider)
     res.status(diagnostics.ok ? 200 : 503).render('pages/diagnostics', {
       title: 'Production diagnostics',
       active: 'diagnostics',

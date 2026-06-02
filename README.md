@@ -19,6 +19,7 @@ Early public-preview quality. The app is read-only by design: no casts, likes, f
 - Optional server-side Neynar provider for later managed reads.
 - Hypersnap-first live data strategy; raw Snapchain is reserved for later owned indexing/search infrastructure.
 - Feed Lab for comparing recent, engagement, replies, likes, and recasts ranking modes with per-cast score breakdowns.
+- Hypersnap diagnostics for upstream latency, last success/error, active base URL, and response-shape health.
 - Explicit app routes only; no generic provider proxy.
 - CSP, HSTS, `nosniff`, escaped user content, and provider-key isolation tests.
 - Node test suite covering routes, providers, view models, security, pagination, and smoke paths.

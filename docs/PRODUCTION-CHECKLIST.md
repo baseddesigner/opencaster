@@ -14,6 +14,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [x] `/healthz` returns plain `ok` for simple process health.
 - [x] `/readyz` returns JSON readiness without secrets.
 - [x] `/diagnostics` renders production status without secrets.
+- [x] `/diagnostics` actively probes provider health and reports upstream telemetry.
 
 ## Provider boundary
 
@@ -23,6 +24,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [x] Hypersnap thread pages use the conversation endpoint with direct replies.
 - [x] Hypersnap trending probes the real trending endpoint and falls back to viewer feed when slow.
 - [x] Hypersnap is the preferred no-key live provider path; raw Snapchain is deferred to owned indexing/search infrastructure.
+- [x] Hypersnap diagnostics include latency, last success, last error, active base URL, and response-shape health.
 - [x] Neynar provider remains optional.
 - [x] Missing Neynar credentials render setup states instead of crashing.
 - [x] Real provider integration can be enabled later via config/credentials only.
@@ -69,6 +71,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [x] Hypersnap config works without keys and defaults to Cassie’s public node.
 - [x] Hypersnap client sends no auth headers and maps feed/user/cast/search endpoints.
 - [x] Hypersnap conversation, authored-cast, trending fallback, and health-check paths are tested.
+- [x] Hypersnap telemetry and response-shape health are tested.
 - [x] Mobile CSS regression guards prevent the previous fixed-nav/header collision.
 - [x] Missing Neynar key is setup-only, not fatal.
 - [x] Demo provider covers feed/search/profile/thread.

@@ -193,6 +193,7 @@
   .check-grid section, .diagnostic-grid article { padding: 1rem; box-shadow: none; }
   .diagnostic-grid span { color: var(--muted); font-size: .82rem; }
   .diagnostic-grid strong { display: block; font-size: 1.3rem; margin: .25rem 0; }
+  .diagnostic-url { font-size: .98rem !important; overflow-wrap: anywhere; }
   .check-list { list-style: none; padding: 0; display: grid; gap: .45rem; }
   .check-list li { display: flex; gap: .6rem; align-items: center; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); }
   .check-list span { color: var(--success); font-weight: 900; }

@@ -22,3 +22,53 @@ test('readiness endpoint reports provider mode and checklist gates', async () =>
   assert.equal(res.body.security.noGenericProxy, true)
   assert.doesNotMatch(JSON.stringify(res.body), /super-secret/)
 })
+
+test('diagnostics surfaces Hypersnap upstream reliability metadata', async () => {
+  const provider = {
+    name: 'hypersnap',
+    ready: true,
+    diagnostics: () => ({
+      name: 'hypersnap',
+      ready: true,
+      mode: 'live-provider',
+      liveData: true,
+      noKeyRequired: true,
+      baseUrl: 'https://haatz.example',
+      upstreamLatencyMs: 37,
+      lastSuccessAt: '2026-06-02T12:00:00.037Z',
+      lastErrorAt: '',
+      lastError: '',
+      responseShapeHealth: {
+        status: 'ok',
+        endpoint: '/v1/info',
+        checkedAt: '2026-06-02T12:00:00.037Z',
+        message: 'Hypersnap response shape matched expected /v1/info object.'
+      }
+    }),
+    healthCheck: async () => ({
+      ready: true,
+      status: 200,
+      upstreamLatencyMs: 37,
+      lastSuccessAt: '2026-06-02T12:00:00.037Z',
+      responseShapeHealth: {
+        status: 'ok',
+        endpoint: '/v1/info',
+        checkedAt: '2026-06-02T12:00:00.037Z',
+        message: 'Hypersnap response shape matched expected /v1/info object.'
+      }
+    })
+  }
+  const config = { nodeEnv: 'production', provider: 'hypersnap', defaultFeed: 'builders', apiKey: '', cacheTtlSeconds: 60, providerReady: true, isLiveProvider: true }
+  const app = createApp({ config, provider })
+
+  const ready = await request(app).get('/readyz').expect(200)
+  assert.equal(ready.body.provider.baseUrl, 'https://haatz.example')
+  assert.equal(ready.body.provider.upstreamLatencyMs, 37)
+  assert.equal(ready.body.provider.responseShapeHealth.status, 'ok')
+
+  const page = await request(app).get('/diagnostics').expect(200)
+  assert.match(page.text, /https:\/\/haatz\.example/)
+  assert.match(page.text, /37ms/)
+  assert.match(page.text, /2026-06-02T12:00:00.037Z/)
+  assert.match(page.text, /shape.*ok/i)
+})
