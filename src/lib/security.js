@@ -17,15 +17,32 @@ function securityHeaders(req, res, next) {
   next()
 }
 
-function createRateLimiter({ windowMs = 60_000, max = 120 } = {}) {
+function createRateLimiter({ windowMs = 60_000, max = 120, maxKeys = 5_000, now = Date.now } = {}) {
   const hits = new Map()
-  return function rateLimiter(req, res, next) {
-    const now = Date.now()
+  const keyLimit = Math.max(1, Number(maxKeys) || 5_000)
+  const sweepExpired = (currentTime) => {
+    for (const [key, bucket] of hits) {
+      if (currentTime > bucket.resetAt) hits.delete(key)
+    }
+  }
+  const trimOldest = () => {
+    while (hits.size >= keyLimit) {
+      const oldestKey = hits.keys().next().value
+      if (oldestKey === undefined) break
+      hits.delete(oldestKey)
+    }
+  }
+
+  function rateLimiter(req, res, next) {
+    const currentTime = now()
     const key = req.ip || req.socket?.remoteAddress || 'local'
-    const bucket = hits.get(key) || { count: 0, resetAt: now + windowMs }
-    if (now > bucket.resetAt) {
+    let bucket = hits.get(key)
+    if (!bucket && hits.size >= keyLimit) sweepExpired(currentTime)
+    if (!bucket && hits.size >= keyLimit) trimOldest()
+    bucket = bucket || { count: 0, resetAt: currentTime + windowMs }
+    if (currentTime > bucket.resetAt) {
       bucket.count = 0
-      bucket.resetAt = now + windowMs
+      bucket.resetAt = currentTime + windowMs
     }
     bucket.count += 1
     hits.set(key, bucket)
@@ -34,6 +51,8 @@ function createRateLimiter({ windowMs = 60_000, max = 120 } = {}) {
     if (bucket.count > max) return res.status(429).type('text/plain').send('Too many requests')
     next()
   }
+  rateLimiter.storeSize = () => hits.size
+  return rateLimiter
 }
 
 function isSafeExternalUrl(url) {

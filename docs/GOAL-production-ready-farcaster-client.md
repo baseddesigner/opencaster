@@ -32,7 +32,7 @@ The end state should feel like a daily-use Farcaster power client for people who
 - Keyboard-friendly navigation and visible focus states.
 - Light/dark mode using design tokens, not one-off CSS hacks.
 - Deterministic demo mode that needs no env vars.
-- Provider boundary that supports `demo` now and `neynar`/other providers later.
+- Provider boundary that supports `demo`, preferred no-key `hypersnap`, optional `neynar`, and later indexing providers.
 
 ### Later / Plug-In Seams Only
 
@@ -42,7 +42,7 @@ The end state should feel like a daily-use Farcaster power client for people who
 - App-side write actions.
 - User accounts and preferences synced server-side.
 - Database-backed saved feeds.
-- Snapchain-backed indexing.
+- Hypersnap/Snapchain-backed owned indexing.
 - Production deployment credentials.
 
 ## Architecture Goal
@@ -63,6 +63,7 @@ Add production structure without turning it into framework sludge:
 src/
   providers/
     demo-provider.js
+    hypersnap-provider.js
     neynar-provider.js
     index.js
   lib/

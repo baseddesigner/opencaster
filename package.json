@@ -7,12 +7,12 @@
   "type": "commonjs",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/baseddesigner/farcaster-client.git"
+    "url": "git+https://github.com/baseddesigner/opencaster.git"
   },
   "bugs": {
-    "url": "https://github.com/baseddesigner/farcaster-client/issues"
+    "url": "https://github.com/baseddesigner/opencaster/issues"
   },
-  "homepage": "https://github.com/baseddesigner/farcaster-client#readme",
+  "homepage": "https://github.com/baseddesigner/opencaster#readme",
   "keywords": [
     "farcaster",
     "social-client",
@@ -30,7 +30,13 @@
     "start": "node src/server.js",
     "test": "node --test tests/*.test.js",
     "check": "node --check src/server.js && node --check scripts/smoke.js && node --check scripts/mobile-cdp-qa.js && node --test tests/*.test.js",
-    "smoke": "node scripts/smoke.js"
+    "smoke": "node scripts/smoke.js",
+    "local:dev:start": "scripts/local-dev.sh start",
+    "local:dev:stop": "scripts/local-dev.sh stop",
+    "local:dev:restart": "scripts/local-dev.sh restart",
+    "local:dev:rebuild": "scripts/local-dev.sh rebuild",
+    "local:dev:logs": "scripts/local-dev.sh logs",
+    "local:dev:status": "scripts/local-dev.sh status"
   },
   "dependencies": {
     "dotenv": "^17.2.3",

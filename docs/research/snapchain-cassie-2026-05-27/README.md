@@ -1,6 +1,7 @@
 # Snapchain / Hypersnap / free Farcaster API research
 
 Accessed: 2026-05-27
+Updated: 2026-06-02
 
 Lead question: Cassie on Farcaster appears to have shared a free Snapchain/Farcaster API. What is it, what is reliable enough to use, and what should we steal/adapt from Cassie + Dylan Steck repos for our Farcaster client?
 
@@ -13,17 +14,20 @@ The remembered link is almost certainly Cassie’s Hypersnap/Farcaster API cast:
 - Direct no-key API cast: https://farcaster.xyz/cassie/0x0bc38a09
 - Docs: https://hypersnap-docs.qstorage.quilibrium.com/
 - Public API base: https://haatz.quilibrium.com
+- Upstream repo: https://github.com/farcasterorg/hypersnap
 
 The important bit: Hypersnap exposes a Neynar-shaped `/v2/farcaster/*` API over a public node, with public reads requiring no auth/API key. It is perfect for a **third provider adapter** in our client, but not something to blindly make the only production dependency without uptime/rate-limit testing.
+
+2026-06-02 decision: for OpenCaster, prefer Hypersnap over a direct Farcaster Snapchain provider. The `farcasterorg/hypersnap` repo presents itself as "Snapchain, made hyperdimensional" and is materially closer to the infrastructure path we want: a maintained Rust/Docker Snapchain implementation plus an HTTP surface that can serve read clients. Raw Snapchain remains useful as an owned-indexing source later, but it is no longer the next application-provider target.
 
 Best immediate architecture:
 
 1. Keep `demo` as default/no-secret mode.
 2. Add `hypersnap` provider next: no-key, Neynar-ish response shape, fast product value.
-3. Add `snapchain-http` provider for raw/canonical reads from `https://snap.farcaster.xyz:3381` or a self-hosted node.
+3. Deepen Hypersnap support before adding raw Snapchain: health, endpoint coverage, response fixtures, and clear upstream diagnostics.
 4. Add `public-farcaster` adapter for `api.farcaster.xyz` / `client.farcaster.xyz` read endpoints as fallback/enrichment.
 5. Use Dylan’s `casterscan` patterns: typed upstream wrappers, Zod query validation, cache/coalescing, timeouts, explicit endpoint routes. No generic proxy.
-6. Only run our own Snapchain node when the moat is indexing/search/ranking/reliability, not merely rendering a better feed.
+6. Only run our own Snapchain/Hypersnap node when the moat is indexing/search/ranking/reliability, not merely rendering a better feed.
 
 ## Files in this folder
 
@@ -41,6 +45,7 @@ Best immediate architecture:
 - Confirmed `https://haatz.quilibrium.com/v1/info` returns Snapchain-like node info without auth.
 - Confirmed `https://snap.farcaster.xyz:3381/v1/info` returns JSON without auth.
 - Inspected GitHub metadata and key file URLs for `CassOnMars/*` and `dylsteck/*` repos.
+- Confirmed `farcasterorg/hypersnap` is public and describes itself as "Snapchain, made hyperdimensional"; it includes Docker/Compose, Rust source, protocol files, and operational docs.
 
 ## Safety note
 

@@ -8,8 +8,8 @@ function createHypersnapClient({
   timeoutMs = 8000
 } = {}) {
   if (!fetchImpl) throw new Error('fetch implementation is required')
-  const cleanBaseUrl = String(baseUrl || 'https://haatz.quilibrium.com').replace(/\/+$/, '')
-  const cleanPublicFarcasterBaseUrl = String(publicFarcasterBaseUrl || 'https://api.farcaster.xyz').replace(/\/+$/, '')
+  const cleanBaseUrl = normalizeHttpsBaseUrl(baseUrl || 'https://haatz.quilibrium.com', 'Hypersnap base URL')
+  const cleanPublicFarcasterBaseUrl = normalizeHttpsBaseUrl(publicFarcasterBaseUrl || 'https://api.farcaster.xyz', 'Public Farcaster base URL')
 
   async function requestUrl(url) {
     const controller = new AbortController()
@@ -124,6 +124,12 @@ function createHypersnapClient({
       }
     }
   }
+}
+
+function normalizeHttpsBaseUrl(value, label) {
+  const parsed = new URL(String(value || ''))
+  if (parsed.protocol !== 'https:') throw new Error(`${label} must use https.`)
+  return parsed.toString().replace(/\/+$/, '')
 }
 
 module.exports = { createHypersnapClient }

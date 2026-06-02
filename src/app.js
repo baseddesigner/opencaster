@@ -20,6 +20,7 @@ function createApp({ provider, neynarClient, config, cache } = {}) {
 
   app.set('view engine', 'ejs')
   app.set('views', path.join(__dirname, '..', 'views'))
+  app.set('trust proxy', resolvedConfig.trustProxy || false)
   app.disable('x-powered-by')
 
   app.use(securityHeaders)
@@ -83,7 +84,8 @@ function normalizeRuntimeConfig(config) {
     cacheTtlSeconds: config.cacheTtlSeconds || 60,
     publicBaseUrl: config.publicBaseUrl || 'http://127.0.0.1:3039',
     port: config.port || 3039,
-    host: config.host || '127.0.0.1'
+    host: config.host || '127.0.0.1',
+    trustProxy: config.trustProxy || false
   }
 }
 

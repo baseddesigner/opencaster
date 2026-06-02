@@ -41,7 +41,8 @@ test('loadConfig accepts explicit live provider values', () => {
     HOST: '127.0.0.2',
     DEFAULT_FEED: 'agents',
     CACHE_TTL_SECONDS: '5',
-    PUBLIC_BASE_URL: 'https://example.com'
+    PUBLIC_BASE_URL: 'https://example.com',
+    TRUST_PROXY: 'loopback'
   })
   assert.equal(config.apiKey, 'secret')
   assert.equal(config.provider, 'neynar')
@@ -51,6 +52,7 @@ test('loadConfig accepts explicit live provider values', () => {
   assert.equal(config.defaultFeed, 'agents')
   assert.equal(config.cacheTtlSeconds, 5)
   assert.equal(config.publicBaseUrl, 'https://example.com')
+  assert.equal(config.trustProxy, 'loopback')
 })
 
 
@@ -61,4 +63,29 @@ test('loadConfig accepts no-key Hypersnap live provider with safe default base U
   assert.equal(config.isLiveProvider, true)
   assert.equal(config.hypersnapBaseUrl, 'https://haatz.quilibrium.com')
   assert.equal(config.providerSetupMessage, '')
+})
+
+test('loadConfig rejects non-HTTPS Hypersnap base URLs', () => {
+  assert.throws(() => loadConfig({
+    NODE_ENV: 'production',
+    FARCASTER_PROVIDER: 'hypersnap',
+    HYPERSNAP_BASE_URL: 'http://haatz.quilibrium.com'
+  }), /HYPERSNAP_BASE_URL must use https/)
+})
+
+test('loadConfig rejects Hypersnap hosts outside the configured allowlist', () => {
+  assert.throws(() => loadConfig({
+    NODE_ENV: 'production',
+    FARCASTER_PROVIDER: 'hypersnap',
+    HYPERSNAP_BASE_URL: 'https://metadata.google.internal'
+  }), /HYPERSNAP_BASE_URL host is not allowed/)
+
+  const config = loadConfig({
+    NODE_ENV: 'production',
+    FARCASTER_PROVIDER: 'hypersnap',
+    HYPERSNAP_BASE_URL: 'https://custom-hypersnap.example/',
+    HYPERSNAP_ALLOWED_HOSTS: 'haatz.quilibrium.com, custom-hypersnap.example'
+  })
+  assert.equal(config.hypersnapBaseUrl, 'https://custom-hypersnap.example')
+  assert.deepEqual(config.hypersnapAllowedHosts, ['haatz.quilibrium.com', 'custom-hypersnap.example'])
 })

@@ -23,6 +23,13 @@ test('Hypersnap client sends no auth headers and maps configured endpoints', asy
   assert.equal(calls[0].options.headers.authorization, undefined)
 })
 
+test('Hypersnap client rejects plaintext upstream URLs', () => {
+  assert.throws(() => createHypersnapClient({
+    baseUrl: 'http://haatz.example',
+    fetchImpl: async () => ({ ok: true, status: 200, json: async () => ({}) })
+  }), /Hypersnap base URL must use https/)
+})
+
 test('Hypersnap cast search falls back to public Farcaster search when Hypersnap returns no casts', async () => {
   const calls = []
   const client = createHypersnapClient({

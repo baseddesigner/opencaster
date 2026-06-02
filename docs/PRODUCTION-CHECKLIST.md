@@ -22,6 +22,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [x] Hypersnap authored profile casts use FID feed reads instead of username search.
 - [x] Hypersnap thread pages use the conversation endpoint with direct replies.
 - [x] Hypersnap trending probes the real trending endpoint and falls back to viewer feed when slow.
+- [x] Hypersnap is the preferred no-key live provider path; raw Snapchain is deferred to owned indexing/search infrastructure.
 - [x] Neynar provider remains optional.
 - [x] Missing Neynar credentials render setup states instead of crashing.
 - [x] Real provider integration can be enabled later via config/credentials only.
@@ -85,4 +86,4 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [ ] Managed signers.
 - [ ] App-side casts, likes, follows, DMs, payments, or other external side effects.
 - [ ] Database-backed user preferences / saved feeds.
-- [ ] Snapchain-backed owned indexing.
+- [ ] Hypersnap/Snapchain-backed owned indexing.

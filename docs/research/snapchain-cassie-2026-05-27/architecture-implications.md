@@ -1,6 +1,7 @@
 # Architecture implications for our Farcaster client
 
 Accessed: 2026-05-27
+Updated: 2026-06-02
 
 ## Current client state
 
@@ -12,7 +13,9 @@ Our app is now a production-shaped no-build Express/EJS Farcaster client with:
 - no generic provider proxy;
 - tests for escaping, secret non-leakage, provider defaults, routes, diagnostics, and UI blocker regressions.
 
-This research says the next move should not be “run a Snapchain node tomorrow.” The next move is a **no-key Hypersnap provider** plus a raw Snapchain adapter behind the same provider boundary.
+This research says the next move should not be “run a Snapchain node tomorrow.” The next move is a **no-key Hypersnap provider** and deeper Hypersnap compatibility before any raw Snapchain provider work. The raw Snapchain path is reserved for owned indexing, search, ranking, or node operations.
+
+2026-06-02 update: prefer `farcasterorg/hypersnap` over Farcaster's raw Snapchain provider path for OpenCaster. That repo is public, describes itself as "Snapchain, made hyperdimensional," and includes the Rust/Docker operational surface we would rather track if we eventually operate infrastructure. For app-level reads, the hosted Hypersnap HTTP API remains the preferred source.
 
 ## Provider stack proposal
 
@@ -22,8 +25,8 @@ Route/view layer
       -> demo provider                 # current default, deterministic
       -> hypersnap provider            # no-key hydrated reads via haatz.quilibrium.com
       -> neynar provider               # optional key, production managed provider
-      -> snapchain-http provider       # raw canonical reads via snap.farcaster.xyz or own node
       -> public-farcaster provider     # api/client.farcaster.xyz fallback
+      -> snapchain/indexed provider    # later owned index, not next app provider
   -> cache/coalescing/rate guard
   -> stable view models
 ```
@@ -59,36 +62,28 @@ Acceptance:
 - No generic `GET /api/hypersnap/*` proxy appears.
 - Endpoint failures show setup/error states, not stack traces.
 
-### Phase 2 — Public Snapchain HTTP provider
+### Phase 2 — Hypersnap hardening and coverage
 
-Goal: prove raw canonical reads can power profile/cast/thread surfaces.
+Goal: make Hypersnap the preferred live read path and prove it is reliable enough for public OpenCaster usage.
 
 Tasks:
 
-- Add `SNAPCHAIN_HTTP_BASE_URL`, default `https://snap.farcaster.xyz:3381`.
-- Implement raw client methods for:
-  - `/v1/info`;
-  - `/v1/castsByFid`;
-  - `/v1/castById`;
-  - `/v1/castsByParent`;
-  - `/v1/userDataByFid`;
-  - `/v1/verificationsByFid`;
-  - `/v1/linksByFid`;
-  - `/v1/reactionsByCast` if available/needed.
-- Add a hydration layer:
-  - username/FID lookup from `fnames.farcaster.xyz` or public Farcaster API;
-  - profile metadata from user data messages;
-  - reaction counts if needed.
+- Expand endpoint fixtures for feeds, casts, users, search, conversation, and health.
+- Track upstream latency and last success/error in diagnostics.
+- Keep `HYPERSNAP_BASE_URL` HTTPS-only and host-allowlisted.
+- Document the relationship between hosted Hypersnap reads and the `farcasterorg/hypersnap` repo.
+- Treat public Farcaster APIs as fallback/enrichment, not the primary provider.
 
 Acceptance:
 
-- `/diagnostics` shows Snapchain node info.
-- Profile and cast pages can render from raw Snapchain data for known FIDs/hashes.
-- Search/feed remain Hypersnap/Neynar/public-Farcaster until we own an index.
+- `/diagnostics` clearly reports Hypersnap health, base host, and no-key mode.
+- Hypersnap smoke paths pass without Neynar credentials.
+- Fixture tests catch response-shape drift.
+- No raw Snapchain provider is added unless it supports a concrete owned-indexing/search need.
 
 ### Phase 3 — Indexed mode
 
-Goal: make Snapchain useful for search, feeds, ranking, and alerts.
+Goal: make Snapchain/Hypersnap infrastructure useful for search, feeds, ranking, and alerts.
 
 Do this only if we want an actual data moat.
 
@@ -128,7 +123,7 @@ Use Hypersnap/Neynar-style hydrated APIs. Raw Snapchain alone is too low-level.
 
 ### If we want a better search/ranking client
 
-Snapchain/indexing becomes valuable. The asset is the derived database: normalized graph, labels, ranking, user feedback, and historical search.
+Snapchain/Hypersnap indexing becomes valuable. The asset is the derived database: normalized graph, labels, ranking, user feedback, and historical search.
 
 ### If we want agent-readable Farcaster intelligence
 
