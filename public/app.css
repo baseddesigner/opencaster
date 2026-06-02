@@ -197,12 +197,39 @@
   .check-list li { display: flex; gap: .6rem; align-items: center; padding: .55rem .7rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); }
   .check-list span { color: var(--success); font-weight: 900; }
   .muted-list span { color: var(--soft); }
+
+  .lab-shell { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1rem; align-items: start; }
+  .lab-main { min-width: 0; }
+  .lab-hero { display: grid; grid-template-columns: 1fr minmax(210px, 280px); gap: 1rem; align-items: end; }
+  .lab-hero p { max-width: 66ch; margin-bottom: 0; }
+  .lab-active-score { border: 1px solid var(--line); border-radius: 22px; padding: .85rem; background: var(--card-strong); }
+  .lab-active-score span, .lab-active-score small, .score-grid span, .score-grid small, .lab-card-rank small { color: var(--muted); }
+  .lab-active-score span, .score-grid span { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; font-weight: 800; }
+  .lab-active-score strong { display: block; font-size: 1.55rem; line-height: 1.05; margin: .35rem 0; letter-spacing: -.03em; }
+  .lab-controls { display: grid; gap: .65rem; margin: .8rem 0 1rem; }
+  .lab-feed-tabs, .lab-mode-tabs { justify-content: flex-start; overflow-x: auto; border-radius: 18px; }
+  .disabled-tab { min-height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1px dashed var(--line-strong); border-radius: 999px; padding: .35rem .62rem; color: var(--soft); background: color-mix(in srgb, var(--card) 55%, transparent); white-space: nowrap; }
+  .lab-list { display: grid; gap: .85rem; }
+  .lab-card { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: .9rem; border: 1px solid var(--line); border-radius: 24px; padding: .85rem; background: color-mix(in srgb, var(--card) 92%, transparent); }
+  .lab-card:hover { border-color: var(--line-strong); background: var(--card-strong); }
+  .lab-card-rank { display: grid; align-content: start; gap: .25rem; border-right: 1px solid var(--line); padding-right: .85rem; }
+  .lab-card-rank span { color: var(--accent-ink); font: 800 .9rem/1 var(--mono); }
+  .lab-card-rank strong { font-size: 1.55rem; line-height: 1; letter-spacing: -.04em; overflow-wrap: anywhere; }
+  .lab-card-body { min-width: 0; }
+  .score-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .45rem; margin-top: .75rem; }
+  .score-grid div { min-width: 0; border: 1px solid var(--line); border-radius: 16px; padding: .62rem; background: color-mix(in srgb, var(--bg-elevated) 45%, transparent); }
+  .score-grid div.active { border-color: var(--accent); background: var(--accent-soft); }
+  .score-grid strong { display: block; margin: .18rem 0; font-size: 1.05rem; line-height: 1.05; overflow-wrap: anywhere; }
+  .score-grid small { display: block; font-size: .74rem; line-height: 1.25; }
+  .lab-rail { display: grid; gap: .9rem; position: sticky; top: 74px; }
 }
 
 @layer responsive {
   @media (max-width: 1180px) {
     .feed-shell { grid-template-columns: 190px minmax(0, 1fr); }
     .right-rail { display: none; }
+    .lab-shell { grid-template-columns: 1fr; }
+    .lab-rail { display: none; }
     .site-header { grid-template-columns: auto 1fr auto; }
     .theme-toggle { grid-column: 4; }
   }
@@ -228,6 +255,10 @@
     .toolbar, .section-head { align-items: flex-start; flex-direction: column; }
     .search-form { grid-template-columns: 1fr; }
     .check-grid, .diagnostic-grid { grid-template-columns: 1fr; }
+    .lab-hero { grid-template-columns: 1fr; }
+    .lab-card { grid-template-columns: 1fr; }
+    .lab-card-rank { border-right: 0; border-bottom: 1px solid var(--line); padding: 0 0 .65rem; grid-template-columns: auto auto 1fr; align-items: end; }
+    .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 520px) {
     .app-shell { padding: .65rem; }
@@ -243,6 +274,8 @@
     .cast-topline { align-items: flex-start; }
     .profile-card { display: block; }
     .avatar.large { width: 72px; height: 72px; margin-bottom: .75rem; }
+    .lab-card { padding: .72rem; border-radius: 20px; }
+    .score-grid { grid-template-columns: 1fr; }
   }
 
   @media (prefers-reduced-motion: reduce) {

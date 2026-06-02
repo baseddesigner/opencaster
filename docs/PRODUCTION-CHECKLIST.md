@@ -51,6 +51,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [x] Profile pages by username and FID.
 - [x] Cast/thread pages with replies, parent context, and outbound Farcaster links.
 - [x] Search for casts and users with cast pagination and local profile links.
+- [x] Feed Lab compares recent, engagement, replies, likes, and recasts ranking modes with score breakdowns.
 - [x] About/setup positioning page.
 - [x] Designed setup, empty, and error states.
 - [x] Mobile bottom navigation.
@@ -73,6 +74,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 - [x] Demo provider covers feed/search/profile/thread.
 - [x] Provider factory selects demo or setup-only Neynar correctly.
 - [x] Routes render all key pages.
+- [x] Feed Lab ranking helper and route behavior are tested.
 - [x] Security headers are tested.
 - [x] HTML escaping and unsafe embed filtering are tested.
 - [x] Secret non-leak tests cover pages and diagnostics.

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> · Farcaster Lite</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <%- include('../partials/header', { active }) %>
+  <main class="app-shell lab-shell">
+    <section class="lab-main">
+      <section class="hero lab-hero">
+        <div>
+          <p class="eyebrow">Feed Lab · explainable ranking</p>
+          <h1>Feed Lab</h1>
+          <p>Compare the same Farcaster lane through different ranking lenses and inspect the score ledger behind each cast.</p>
+        </div>
+        <div class="lab-active-score">
+          <span>Active mode</span>
+          <strong><%= modes[mode].label %></strong>
+          <small><%= modes[mode].description %></small>
+        </div>
+      </section>
+
+      <div class="lab-controls" aria-label="Feed lab controls">
+        <div class="segmented lab-feed-tabs" aria-label="Feed preset">
+          <span>Feed</span>
+          <% Object.entries(feeds).forEach(([id, item]) => { %>
+            <a class="<%= id === feedId ? 'active' : '' %>" href="/lab?feed=<%= encodeURIComponent(id) %>&mode=<%= encodeURIComponent(mode) %>"><%= item.shortLabel || item.label %></a>
+          <% }) %>
+        </div>
+        <div class="segmented lab-mode-tabs" aria-label="Ranking mode">
+          <span>Rank by</span>
+          <% Object.entries(modes).forEach(([id, item]) => { %>
+            <a class="<%= id === mode ? 'active' : '' %>" href="/lab?feed=<%= encodeURIComponent(feedId) %>&mode=<%= encodeURIComponent(id) %>"><%= item.shortLabel %></a>
+          <% }) %>
+          <% Object.entries(upcomingModes).forEach(([id, item]) => { %>
+            <span class="disabled-tab" title="<%= item.description %>"><%= item.shortLabel %></span>
+          <% }) %>
+        </div>
+      </div>
+
+      <% if (setupMessage) { %>
+        <%- include('../partials/empty-state', { message: setupMessage, detail: 'Demo mode needs no env vars. Live providers can be plugged in later.' }) %>
+      <% } %>
+      <% if (errorMessage) { %>
+        <%- include('../partials/error-state', { message: errorMessage }) %>
+      <% } %>
+
+      <section class="lab-list" aria-label="Ranked cast analysis">
+        <% if (casts.length === 0 && !setupMessage && !errorMessage) { %>
+          <%- include('../partials/empty-state', { message: 'No casts available for the lab.', detail: 'Try a different feed preset or provider.' }) %>
+        <% } %>
+        <% casts.forEach((cast) => { %>
+          <article class="lab-card">
+            <div class="lab-card-rank">
+              <span>#<%= cast.labRank %></span>
+              <strong><%= cast.labScoreLabel %></strong>
+              <small><%= modes[mode].label %></small>
+            </div>
+            <div class="lab-card-body">
+              <div class="cast-topline">
+                <a class="cast-author" href="/u/<%= encodeURIComponent(cast.author.username) %>">
+                  <img class="avatar" src="<%= cast.author.pfpUrl %>" alt="" loading="lazy">
+                  <span>
+                    <strong class="author-name"><%= cast.author.displayName %></strong>
+                    <span class="muted">@<%= cast.author.username %> · <%= cast.timestampLabel %></span>
+                  </span>
+                </a>
+                <a class="text-link" href="/cast/<%= encodeURIComponent(cast.hash) %>">Thread</a>
+              </div>
+              <p class="cast-text"><%= cast.text %></p>
+              <div class="score-grid" aria-label="Score breakdown">
+                <% cast.labBreakdown.forEach((item) => { %>
+                  <div class="<%= item.mode === mode ? 'active' : '' %>">
+                    <span><%= item.label %></span>
+                    <strong><%= item.display %></strong>
+                    <small><%= item.formula %></small>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+      </section>
+    </section>
+
+    <aside class="lab-rail" aria-label="Feed lab context">
+      <div class="rail-card sticky-card">
+        <span class="notice-kicker">Formula</span>
+        <h2><%= modes[mode].label %></h2>
+        <p><%= modes[mode].description %></p>
+      </div>
+      <div class="rail-card">
+        <span class="notice-kicker">Current lane</span>
+        <h2><%= feed.label %></h2>
+        <p><%= feed.description %></p>
+        <a class="rail-link" href="/feed/<%= encodeURIComponent(feedId) %>">Open feed</a>
+        <a class="rail-link" href="/search?q=<%= encodeURIComponent(feed.query || feed.label) %>&type=casts">Search lane</a>
+      </div>
+    </aside>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

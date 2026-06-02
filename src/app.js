@@ -9,6 +9,7 @@ const { registerProfileRoutes } = require('./routes/profile')
 const { registerCastRoutes } = require('./routes/cast')
 const { registerSearchRoutes } = require('./routes/search')
 const { registerDiagnosticsRoutes } = require('./routes/diagnostics')
+const { registerLabRoutes } = require('./routes/lab')
 const { AppError } = require('./lib/errors')
 const { securityHeaders, createRateLimiter } = require('./lib/security')
 
@@ -45,6 +46,7 @@ function createApp({ provider, neynarClient, config, cache } = {}) {
 
   registerDiagnosticsRoutes(app, ctx)
   registerHomeRoutes(app, ctx)
+  registerLabRoutes(app, ctx)
   registerProfileRoutes(app, ctx)
   registerCastRoutes(app, ctx)
   registerSearchRoutes(app, ctx)

@@ -18,6 +18,7 @@ Early public-preview quality. The app is read-only by design: no casts, likes, f
 - Optional no-key `hypersnap` provider for live Farcaster reads through Cassie’s public Hypersnap node.
 - Optional server-side Neynar provider for later managed reads.
 - Hypersnap-first live data strategy; raw Snapchain is reserved for later owned indexing/search infrastructure.
+- Feed Lab for comparing recent, engagement, replies, likes, and recasts ranking modes with per-cast score breakdowns.
 - Explicit app routes only; no generic provider proxy.
 - CSP, HSTS, `nosniff`, escaped user content, and provider-key isolation tests.
 - Node test suite covering routes, providers, view models, security, pagination, and smoke paths.
@@ -95,6 +96,7 @@ Never commit `.env` or provider keys.
 
 - `/` default feed
 - `/feed/:feedId` configured feed preset
+- `/lab` feed ranking lab
 - `/u/:username` profile
 - `/fid/:fid` profile by FID
 - `/cast/:hash` cast/thread

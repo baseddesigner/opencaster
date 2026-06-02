@@ -136,3 +136,37 @@ test('configured feed falls back when live search returns no casts', async () =>
   assert.deepEqual(calls, ['search', 'fallback'])
   assert.match(res.text, /fallback trend/)
 })
+
+test('feed lab renders explainable ranking modes', async () => {
+  const app = createApp({
+    provider: mockProvider({
+      fetchFeed: async () => ({
+        casts: [
+          { hash: '0xaaaabbbb', text: 'like-heavy cast', author: { username: 'alice' }, replies: { count: 1 }, reactions: { likes_count: 20, recasts_count: 0 }, timestamp: '2026-01-01T00:00:00.000Z' },
+          { hash: '0xbbbbcccc', text: 'reply-heavy cast', author: { username: 'bob' }, replies: { count: 9 }, reactions: { likes_count: 1, recasts_count: 0 }, timestamp: '2026-01-02T00:00:00.000Z' },
+          { hash: '0xccccdddd', text: 'recast-heavy cast', author: { username: 'carol' }, replies: { count: 0 }, reactions: { likes_count: 0, recasts_count: 8 }, timestamp: '2026-01-03T00:00:00.000Z' }
+        ],
+        nextCursor: null
+      })
+    }),
+    config: baseConfig
+  })
+
+  const likes = await request(app).get('/lab?feed=builders&mode=likes').expect(200)
+  assert.match(likes.text, /Feed Lab/)
+  assert.match(likes.text, /Score breakdown/)
+  assert.match(likes.text, /OpenRank/)
+  assert.ok(likes.text.indexOf('like-heavy cast') < likes.text.indexOf('reply-heavy cast'))
+
+  const replies = await request(app).get('/lab?feed=builders&mode=replies').expect(200)
+  assert.ok(replies.text.indexOf('reply-heavy cast') < replies.text.indexOf('like-heavy cast'))
+})
+
+test('feed lab renders setup state when provider is unavailable', async () => {
+  const app = createApp({
+    config: { nodeEnv: 'production', provider: 'neynar', defaultFeed: 'builders', apiKey: '', cacheTtlSeconds: 60, providerReady: false, isLiveProvider: true, providerSetupMessage: 'NEYNAR_API_KEY is missing.' }
+  })
+  const res = await request(app).get('/lab').expect(200)
+  assert.match(res.text, /Feed Lab/)
+  assert.match(res.text, /NEYNAR_API_KEY is missing/)
+})
