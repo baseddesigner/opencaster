@@ -51,6 +51,7 @@ Status: above-9 production-shaped read-only beta: clean install, CI gate, no-key
 
 - [x] Home feed with ranking controls.
 - [x] Vertical feed presets.
+- [x] Feed presets are file-configured and can be overridden with `FEED_PRESETS_FILE`.
 - [x] Profile pages by username and FID.
 - [x] Cast/thread pages with replies, parent context, and outbound Farcaster links.
 - [x] Search for casts and users with cast pagination and local profile links.

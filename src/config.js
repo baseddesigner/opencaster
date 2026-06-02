@@ -1,50 +1,28 @@
+const fs = require('node:fs')
+const path = require('node:path')
 const { z } = require('zod')
 
-const FEEDS = {
-  builders: {
-    label: 'Builders',
-    shortLabel: 'Build',
-    description: 'Farcaster client design, feed quality, social graph, and useful product shipping.',
-    mode: 'search',
-    query: 'farcaster client',
-    fallback: 'trending',
-    accent: 'Product velocity'
-  },
-  agents: {
-    label: 'Agents',
-    shortLabel: 'Agents',
-    description: 'AI agents, autonomous tools, x402, and agent commerce.',
-    mode: 'search',
-    query: 'agent agents x402 ai autonomous',
-    fallback: 'trending',
-    accent: 'Agent commerce'
-  },
-  traders: {
-    label: 'Traders',
-    shortLabel: 'Markets',
-    description: 'Base, markets, token narratives, and high-signal Farcaster chatter.',
-    mode: 'search',
-    query: 'base token market trading degen',
-    fallback: 'trending',
-    accent: 'Market tape'
-  },
-  collectors: {
-    label: 'Collectors',
-    shortLabel: 'Collect',
-    description: 'NFTs, art, mints, collectibles, and onchain culture.',
-    mode: 'search',
-    query: 'nft art mint collector collectible',
-    fallback: 'trending',
-    accent: 'Culture radar'
-  },
-  trending: {
-    label: 'Trending',
-    shortLabel: 'Trend',
-    description: 'Current Farcaster-wide trending casts.',
-    mode: 'trending',
-    accent: 'Network pulse'
-  }
+const DEFAULT_FEED_PRESETS_FILE = path.join(__dirname, '..', 'config', 'feed-presets.json')
+const FEED_ALIASES = {
+  traders: 'markets',
+  collectors: 'art'
 }
+
+const feedPresetSchema = z.object({
+  label: z.string().min(1),
+  shortLabel: z.string().min(1).optional(),
+  description: z.string().min(1).default('Custom Farcaster feed preset.'),
+  mode: z.enum(['search', 'trending']).default('search'),
+  query: z.string().default(''),
+  fallback: z.string().optional(),
+  accent: z.string().optional()
+}).superRefine((preset, ctx) => {
+  if (preset.mode === 'search' && !preset.query.trim()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'search feed presets require a query' })
+  }
+})
+
+const feedPresetsSchema = z.record(z.string().regex(/^[a-z0-9][a-z0-9-]{0,31}$/), feedPresetSchema)
 
 const envSchema = z.object({
   NODE_ENV: z.string().default('development'),
@@ -57,6 +35,7 @@ const envSchema = z.object({
   HOST: z.string().default('127.0.0.1'),
   TRUST_PROXY: z.string().default('false'),
   DEFAULT_FEED: z.string().default('builders'),
+  FEED_PRESETS_FILE: z.string().default(DEFAULT_FEED_PRESETS_FILE),
   CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(60),
   PUBLIC_BASE_URL: z.string().default('http://127.0.0.1:3039')
 })
@@ -85,9 +64,31 @@ function parseTrustProxy(value) {
   return value
 }
 
+function loadFeedPresets(filePath = DEFAULT_FEED_PRESETS_FILE) {
+  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath)
+  const raw = fs.readFileSync(resolvedPath, 'utf8')
+  const parsed = feedPresetsSchema.parse(JSON.parse(raw))
+  if (Object.keys(parsed).length === 0) throw new Error('Feed presets file must define at least one preset.')
+  return Object.fromEntries(Object.entries(parsed).map(([id, preset]) => [id, {
+    ...preset,
+    shortLabel: preset.shortLabel || preset.label,
+    fallback: preset.fallback || ''
+  }]))
+}
+
+const FEEDS = loadFeedPresets()
+
+function resolveFeedId(feedId, feeds) {
+  if (feeds[feedId]) return feedId
+  const alias = FEED_ALIASES[feedId]
+  if (alias && feeds[alias]) return alias
+  return ''
+}
+
 function loadConfig(env = process.env) {
   const parsed = envSchema.parse(env)
-  const defaultFeed = FEEDS[parsed.DEFAULT_FEED] ? parsed.DEFAULT_FEED : 'builders'
+  const feeds = loadFeedPresets(parsed.FEED_PRESETS_FILE)
+  const defaultFeed = resolveFeedId(parsed.DEFAULT_FEED, feeds) || resolveFeedId('builders', feeds) || Object.keys(feeds)[0]
   const provider = parsed.FARCASTER_PROVIDER
   const hypersnapAllowedHosts = parseList(parsed.HYPERSNAP_ALLOWED_HOSTS)
   const hypersnapBaseUrl = normalizeHypersnapBaseUrl(parsed.HYPERSNAP_BASE_URL, hypersnapAllowedHosts)
@@ -110,10 +111,13 @@ function loadConfig(env = process.env) {
     port: parsed.PORT,
     host: parsed.HOST,
     trustProxy: parseTrustProxy(parsed.TRUST_PROXY),
+    feeds,
+    feedAliases: FEED_ALIASES,
     defaultFeed,
+    feedPresetsFile: parsed.FEED_PRESETS_FILE,
     cacheTtlSeconds: parsed.CACHE_TTL_SECONDS,
     publicBaseUrl: parsed.PUBLIC_BASE_URL
   }
 }
 
-module.exports = { FEEDS, loadConfig }
+module.exports = { FEEDS, FEED_ALIASES, loadConfig, loadFeedPresets, resolveFeedId }

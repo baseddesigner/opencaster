@@ -66,6 +66,55 @@ test('feed route rejects unknown feed ids', async () => {
   await request(app).get('/feed/nope').expect(404)
 })
 
+test('feed routes use configured presets and legacy aliases', async () => {
+  const calls = []
+  const app = createApp({
+    provider: mockProvider({
+      fetchFeed: async ({ feedId, query }) => {
+        calls.push({ feedId, query })
+        return { casts: [{ hash: '0xfeed1234', text: `${feedId} ${query}`, author: { username: 'alice' } }], nextCursor: null }
+      }
+    }),
+    config: {
+      ...baseConfig,
+      defaultFeed: 'local',
+      feeds: {
+        local: {
+          label: 'Local',
+          shortLabel: 'Local',
+          description: 'Local custom terms.',
+          mode: 'search',
+          query: 'local custom farcaster terms',
+          fallback: 'trending',
+          accent: 'Local watch'
+        },
+        markets: {
+          label: 'Markets',
+          shortLabel: 'Markets',
+          description: 'Market lane.',
+          mode: 'search',
+          query: 'base token markets',
+          fallback: 'trending',
+          accent: 'Market tape'
+        },
+        trending: {
+          label: 'Trending',
+          description: 'Network pulse.',
+          mode: 'trending'
+        }
+      }
+    }
+  })
+
+  const home = await request(app).get('/').expect(200)
+  assert.match(home.text, /Local/)
+  assert.match(home.text, /local custom farcaster terms/)
+
+  const alias = await request(app).get('/feed/traders').expect(200)
+  assert.match(alias.text, /Markets/)
+  assert.deepEqual(calls.map((call) => call.feedId), ['local', 'markets'])
+})
+
 test('profile, cast, and search routes render server-side pages', async () => {
   const app = createApp({ provider: mockProvider(), config: baseConfig })
   assert.match((await request(app).get('/u/alice').expect(200)).text, /builder/)

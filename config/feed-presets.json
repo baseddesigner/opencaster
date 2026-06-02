@@ -1,0 +1,54 @@
+{
+  "builders": {
+    "label": "Builders",
+    "shortLabel": "Build",
+    "description": "Farcaster client design, feed quality, social graph, and useful product shipping.",
+    "mode": "search",
+    "query": "farcaster client",
+    "fallback": "trending",
+    "accent": "Product velocity"
+  },
+  "agents": {
+    "label": "Agents",
+    "shortLabel": "Agents",
+    "description": "AI agents, autonomous tools, x402, and agent commerce.",
+    "mode": "search",
+    "query": "agent agents x402 ai autonomous",
+    "fallback": "trending",
+    "accent": "Agent commerce"
+  },
+  "markets": {
+    "label": "Markets",
+    "shortLabel": "Markets",
+    "description": "Base, markets, token narratives, and high-signal Farcaster chatter.",
+    "mode": "search",
+    "query": "base token market trading degen",
+    "fallback": "trending",
+    "accent": "Market tape"
+  },
+  "art": {
+    "label": "Art",
+    "shortLabel": "Art",
+    "description": "NFTs, art, mints, collectibles, and onchain culture.",
+    "mode": "search",
+    "query": "nft art mint collector collectible",
+    "fallback": "trending",
+    "accent": "Culture radar"
+  },
+  "protocol": {
+    "label": "Protocol",
+    "shortLabel": "Protocol",
+    "description": "Farcaster protocol, Snapchain, Hypersnap, hubs, Mini Apps, and client infrastructure.",
+    "mode": "search",
+    "query": "farcaster protocol snapchain hypersnap hubs mini apps",
+    "fallback": "trending",
+    "accent": "Protocol watch"
+  },
+  "trending": {
+    "label": "Trending",
+    "shortLabel": "Trend",
+    "description": "Current Farcaster-wide trending casts.",
+    "mode": "trending",
+    "accent": "Network pulse"
+  }
+}

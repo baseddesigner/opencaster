@@ -1,4 +1,4 @@
-const { FEEDS } = require('../config')
+const { resolveFeedId } = require('../config')
 const { normalizeFeedResponse } = require('../lib/view-models')
 
 function registerHomeRoutes(app, ctx) {
@@ -35,13 +35,14 @@ async function loadFeedPayload({ ctx, feed, feedId, rank, cursor }) {
 }
 
 async function renderFeed(req, res, next, ctx, feedId) {
-  const feed = FEEDS[feedId]
+  const resolvedFeedId = resolveFeedId(feedId, ctx.config.feeds)
+  const feed = ctx.config.feeds[resolvedFeedId]
   if (!feed) {
     return res.status(404).render('pages/error', {
       title: 'Feed not found',
       active: 'feed',
       message: 'Couldn’t find that feed.',
-      detail: 'Pick one of the configured feed presets.'
+      detail: 'Pick one of the configured feed presets or update your feed preset file.'
     })
   }
 
@@ -49,7 +50,7 @@ async function renderFeed(req, res, next, ctx, feedId) {
     return res.render('pages/home', {
       title: `${feed.label} feed`,
       active: 'feed',
-      feedId,
+      feedId: resolvedFeedId,
       feed,
       rank: 'signal',
       casts: [],
@@ -62,14 +63,14 @@ async function renderFeed(req, res, next, ctx, feedId) {
   try {
     const cursor = req.query.cursor || ''
     const rank = req.query.rank === 'recent' ? 'recent' : 'signal'
-    const normalized = await loadFeedPayload({ ctx, feed, feedId, rank, cursor })
+    const normalized = await loadFeedPayload({ ctx, feed, feedId: resolvedFeedId, rank, cursor })
     const casts = rank === 'recent'
       ? [...normalized.casts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       : [...normalized.casts].sort((a, b) => b.engagementScore - a.engagementScore)
     res.render('pages/home', {
       title: `${feed.label} feed`,
       active: 'feed',
-      feedId,
+      feedId: resolvedFeedId,
       feed,
       rank,
       casts,
@@ -81,7 +82,7 @@ async function renderFeed(req, res, next, ctx, feedId) {
     res.render('pages/home', {
       title: `${feed.label} feed`,
       active: 'feed',
-      feedId,
+      feedId: resolvedFeedId,
       feed,
       rank: 'signal',
       casts: [],

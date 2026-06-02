@@ -1,7 +1,7 @@
 const path = require('node:path')
 const express = require('express')
 
-const { FEEDS, loadConfig } = require('./config')
+const { FEEDS, FEED_ALIASES, loadConfig } = require('./config')
 const { createCache } = require('./cache')
 const { createProvider } = require('./providers')
 const { registerHomeRoutes } = require('./routes/home')
@@ -28,7 +28,7 @@ function createApp({ provider, neynarClient, config, cache } = {}) {
   app.use(createRateLimiter({ windowMs: 60_000, max: 180 }))
   app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '1h', etag: true }))
   app.use((req, res, next) => {
-    res.locals.feeds = FEEDS
+    res.locals.feeds = resolvedConfig.feeds
     res.locals.defaultFeed = resolvedConfig.defaultFeed || 'builders'
     res.locals.active = ''
     res.locals.provider = {
@@ -82,6 +82,8 @@ function normalizeRuntimeConfig(config) {
     isLiveProvider: Boolean(config.isLiveProvider ?? (config.provider && config.provider !== 'demo')),
     providerReady: Boolean(config.providerReady ?? (config.provider !== 'neynar' || config.apiKey)),
     providerSetupMessage: config.providerSetupMessage || '',
+    feeds: config.feeds || FEEDS,
+    feedAliases: config.feedAliases || FEED_ALIASES,
     defaultFeed: config.defaultFeed || 'builders',
     cacheTtlSeconds: config.cacheTtlSeconds || 60,
     publicBaseUrl: config.publicBaseUrl || 'http://127.0.0.1:3039',

@@ -1,19 +1,29 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const os = require('node:os')
+const path = require('node:path')
 
-const { loadConfig, FEEDS } = require('../src/config')
+const { loadConfig, FEEDS, loadFeedPresets, resolveFeedId } = require('../src/config')
 
 test('loadConfig defaults to no-secret demo provider and configured feeds', () => {
   const config = loadConfig({ NODE_ENV: 'test' })
   assert.equal(config.port, 3039)
   assert.equal(config.host, '127.0.0.1')
   assert.equal(config.defaultFeed, 'builders')
+  assert.ok(config.feeds.builders)
+  assert.ok(config.feeds.markets)
+  assert.ok(config.feeds.art)
+  assert.ok(config.feeds.protocol)
   assert.equal(config.cacheTtlSeconds, 60)
   assert.equal(config.provider, 'demo')
   assert.equal(config.apiKey, '')
   assert.equal(config.isLiveProvider, false)
   assert.ok(FEEDS.builders)
   assert.ok(FEEDS.agents)
+  assert.ok(FEEDS.markets)
+  assert.ok(FEEDS.art)
+  assert.ok(FEEDS.protocol)
   assert.ok(FEEDS.trending)
 })
 
@@ -88,4 +98,48 @@ test('loadConfig rejects Hypersnap hosts outside the configured allowlist', () =
   })
   assert.equal(config.hypersnapBaseUrl, 'https://custom-hypersnap.example')
   assert.deepEqual(config.hypersnapAllowedHosts, ['haatz.quilibrium.com', 'custom-hypersnap.example'])
+})
+
+test('loadConfig accepts contributor-defined feed preset files', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'opencaster-feeds-'))
+  const presetFile = path.join(tmpDir, 'feed-presets.json')
+  fs.writeFileSync(presetFile, JSON.stringify({
+    local: {
+      label: 'Local',
+      shortLabel: 'Local',
+      description: 'Local custom search terms.',
+      mode: 'search',
+      query: 'local custom farcaster terms',
+      fallback: 'trending',
+      accent: 'Local watch'
+    },
+    trending: {
+      label: 'Trending',
+      mode: 'trending',
+      description: 'Network pulse.'
+    }
+  }))
+
+  const config = loadConfig({ NODE_ENV: 'test', FEED_PRESETS_FILE: presetFile, DEFAULT_FEED: 'local' })
+  assert.equal(config.defaultFeed, 'local')
+  assert.equal(config.feedPresetsFile, presetFile)
+  assert.equal(config.feeds.local.query, 'local custom farcaster terms')
+  assert.equal(config.feeds.local.shortLabel, 'Local')
+  assert.equal(config.feeds.trending.mode, 'trending')
+})
+
+test('feed presets validate search queries and legacy aliases', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'opencaster-bad-feeds-'))
+  const presetFile = path.join(tmpDir, 'feed-presets.json')
+  fs.writeFileSync(presetFile, JSON.stringify({
+    broken: {
+      label: 'Broken',
+      mode: 'search',
+      description: 'Missing query.'
+    }
+  }))
+
+  assert.throws(() => loadFeedPresets(presetFile), /search feed presets require a query/)
+  assert.equal(resolveFeedId('traders', FEEDS), 'markets')
+  assert.equal(resolveFeedId('collectors', FEEDS), 'art')
 })

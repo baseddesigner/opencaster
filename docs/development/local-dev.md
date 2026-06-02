@@ -33,6 +33,15 @@ FARCASTER_PROVIDER=hypersnap npm run local:dev:start
 
 `HYPERSNAP_BASE_URL` must use `https:` and its hostname must be present in `HYPERSNAP_ALLOWED_HOSTS`.
 
+Feed presets load from `config/feed-presets.json` by default. To run Docker local dev with custom search lanes:
+
+```bash
+cp config/feed-presets.json config/feed-presets.local.json
+FEED_PRESETS_FILE=config/feed-presets.local.json npm run local:dev:start
+```
+
+The local preset file is ignored by Git.
+
 ## Process Hygiene
 
 `local:dev:start` first stops the project-local Compose stack with `docker compose down --remove-orphans`. It then refuses to start if the selected host port is still occupied. This avoids leaving duplicate dev servers fighting for the same port.

@@ -5,6 +5,7 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+config/feed-presets.local.json
 .DS_Store
 coverage
 .cache

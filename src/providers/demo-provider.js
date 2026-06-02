@@ -96,6 +96,9 @@ function filterCasts(query, feedId) {
   const feedHints = {
     builders: ['farcaster', 'client', 'base', 'protocol', 'shipping', 'provider', 'html'],
     agents: ['agent', 'agents', 'x402', 'paid', 'api', 'secrets'],
+    markets: ['market', 'mcap', 'liquidity', 'risk', 'trending', 'base'],
+    art: ['collecting', 'mint', 'provenance', 'art', 'curation'],
+    protocol: ['farcaster', 'protocol', 'snapchain', 'hypersnap', 'client', 'hubs', 'mini apps'],
     traders: ['market', 'mcap', 'liquidity', 'risk', 'trending'],
     collectors: ['collecting', 'mint', 'provenance', 'art', 'curation'],
     trending: []

@@ -72,6 +72,7 @@ HYPERSNAP_BASE_URL=https://haatz.quilibrium.com
 HYPERSNAP_ALLOWED_HOSTS=haatz.quilibrium.com
 HYPERSNAP_VIEWER_FID=1325
 DEFAULT_FEED=builders
+FEED_PRESETS_FILE=config/feed-presets.json
 CACHE_TTL_SECONDS=60
 PUBLIC_BASE_URL=http://127.0.0.1:3039
 TRUST_PROXY=false
@@ -79,6 +80,19 @@ TRUST_PROXY=false
 
 `HYPERSNAP_BASE_URL` must use `https:` and its hostname must be present in `HYPERSNAP_ALLOWED_HOSTS`.
 Set `TRUST_PROXY` only for a known reverse proxy, for example `loopback`, `1`, or an explicit Express trust proxy value.
+
+## Feed presets
+
+Feed lanes are file-configured, not account/database-backed. Defaults live in [`config/feed-presets.json`](config/feed-presets.json) and include `builders`, `agents`, `markets`, `art`, `protocol`, and `trending`.
+
+To experiment locally:
+
+```bash
+cp config/feed-presets.json config/feed-presets.local.json
+FEED_PRESETS_FILE=config/feed-presets.local.json npm start
+```
+
+Each search preset needs `label`, `mode: "search"`, and `query`. `config/feed-presets.local.json` is ignored by Git.
 
 ## Neynar mode
 

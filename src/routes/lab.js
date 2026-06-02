@@ -1,11 +1,11 @@
-const { FEEDS } = require('../config')
+const { resolveFeedId } = require('../config')
 const { loadFeedPayload } = require('./home')
 const { LAB_MODES, UPCOMING_MODES, normalizeLabMode, rankLabCasts } = require('../lib/feed-lab')
 
 function registerLabRoutes(app, ctx) {
   app.get('/lab', async (req, res) => {
-    const feedId = FEEDS[req.query.feed] ? req.query.feed : (ctx.config.defaultFeed || 'builders')
-    const feed = FEEDS[feedId] || FEEDS.builders
+    const feedId = resolveFeedId(req.query.feed || '', ctx.config.feeds) || ctx.config.defaultFeed
+    const feed = ctx.config.feeds[feedId]
     const mode = normalizeLabMode(req.query.mode || 'engagement')
 
     if (!ctx.provider.ready) {
