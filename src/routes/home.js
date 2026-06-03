@@ -1,5 +1,6 @@
 const { resolveFeedId } = require('../config')
 const { normalizeFeedResponse } = require('../lib/view-models')
+const { DISPLAY_MODES, displayModeHref, filterCastsForDisplayMode, normalizeDisplayMode } = require('../lib/display-modes')
 
 function registerHomeRoutes(app, ctx) {
   app.get('/', (req, res, next) => renderFeed(req, res, next, ctx, ctx.config.defaultFeed || 'builders'))
@@ -47,13 +48,18 @@ async function renderFeed(req, res, next, ctx, feedId) {
   }
 
   if (!ctx.provider.ready) {
+    const displayMode = normalizeDisplayMode(req.query.mode)
     return res.render('pages/home', {
       title: `${feed.label} feed`,
       active: 'feed',
       feedId: resolvedFeedId,
       feed,
       rank: 'signal',
+      displayMode,
+      displayModes: DISPLAY_MODES,
+      displayModeHref: (targetMode) => displayModeHref(`/feed/${resolvedFeedId}`, { rank: 'signal', mode: displayMode }, targetMode),
       casts: [],
+      totalCasts: 0,
       nextCursor: null,
       setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.',
       errorMessage: ''
@@ -63,29 +69,40 @@ async function renderFeed(req, res, next, ctx, feedId) {
   try {
     const cursor = req.query.cursor || ''
     const rank = req.query.rank === 'recent' ? 'recent' : 'signal'
+    const displayMode = normalizeDisplayMode(req.query.mode)
     const normalized = await loadFeedPayload({ ctx, feed, feedId: resolvedFeedId, cursor })
-    const casts = rank === 'recent'
+    const rankedCasts = rank === 'recent'
       ? [...normalized.casts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       : [...normalized.casts].sort((a, b) => b.engagementScore - a.engagementScore)
+    const casts = filterCastsForDisplayMode(rankedCasts, displayMode)
     res.render('pages/home', {
       title: `${feed.label} feed`,
       active: 'feed',
       feedId: resolvedFeedId,
       feed,
       rank,
+      displayMode,
+      displayModes: DISPLAY_MODES,
+      displayModeHref: (targetMode) => displayModeHref(`/feed/${resolvedFeedId}`, { rank, cursor, mode: displayMode }, targetMode),
       casts,
+      totalCasts: normalized.casts.length,
       nextCursor: normalized.nextCursor,
       setupMessage: '',
       errorMessage: ''
     })
   } catch (err) {
+    const displayMode = normalizeDisplayMode(req.query.mode)
     res.render('pages/home', {
       title: `${feed.label} feed`,
       active: 'feed',
       feedId: resolvedFeedId,
       feed,
       rank: 'signal',
+      displayMode,
+      displayModes: DISPLAY_MODES,
+      displayModeHref: (targetMode) => displayModeHref(`/feed/${resolvedFeedId}`, { rank: 'signal', mode: displayMode }, targetMode),
       casts: [],
+      totalCasts: 0,
       nextCursor: null,
       setupMessage: '',
       errorMessage: err.message || 'Farcaster data is slow right now. Try again in a minute.'

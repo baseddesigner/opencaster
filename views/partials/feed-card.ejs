@@ -1,12 +1,12 @@
-<article class="cast-card">
+<article class="cast-card" data-cast-card data-cast-url="/cast/<%= encodeURIComponent(cast.hash) %>" tabindex="-1">
   <%- include('./cast-summary', { cast, showScore: true, showThreadLink: false }) %>
   <% if (cast.whyShown) { %>
     <p class="why-shown"><span>Why shown</span><%= cast.whyShown %></p>
   <% } %>
   <% if (cast.embeds && cast.embeds.length) { %>
-    <div class="embeds">
+    <div class="embeds rich-embeds">
       <% cast.embeds.forEach((embed) => { %>
-        <a href="<%= embed.url %>" target="_blank" rel="noopener noreferrer"><span>↗</span><%= embed.label %></a>
+        <%- include('./embed-card', { embed }) %>
       <% }) %>
     </div>
   <% } %>
@@ -17,6 +17,8 @@
   </div>
   <div class="actions">
     <a href="/cast/<%= encodeURIComponent(cast.hash) %>">View thread</a>
+    <a href="<%= cast.replyUrl %>" target="_blank" rel="noopener noreferrer">Reply in Farcaster</a>
+    <a href="<%= cast.authorSearchUrl %>">More from @<%= cast.author.username %></a>
     <a href="<%= cast.farcasterUrl %>" target="_blank" rel="noopener noreferrer">Open in Farcaster</a>
   </div>
 </article>

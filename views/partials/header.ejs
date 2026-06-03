@@ -15,7 +15,22 @@
     <a class="<%= active === 'about' ? 'active' : '' %>" href="/about">About</a>
   </nav>
   <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle color theme">◐</button>
+  <button class="shortcut-help" type="button" data-shortcuts-toggle aria-label="Show keyboard shortcuts">?</button>
 </header>
+<div class="shortcut-overlay" data-shortcuts-overlay hidden>
+  <div class="shortcut-panel" role="dialog" aria-modal="false" aria-label="Keyboard shortcuts">
+    <button type="button" data-shortcuts-close aria-label="Close shortcuts">×</button>
+    <h2>Shortcuts</h2>
+    <dl>
+      <div><dt>j / k</dt><dd>Move through casts</dd></div>
+      <div><dt>Enter</dt><dd>Open selected thread</dd></div>
+      <div><dt>/</dt><dd>Focus search</dd></div>
+      <div><dt>g h</dt><dd>Go home</dd></div>
+      <div><dt>g s</dt><dd>Go search</dd></div>
+      <div><dt>g l</dt><dd>Go lab</dd></div>
+    </dl>
+  </div>
+</div>
 <nav class="nav mobile-nav" aria-label="Primary mobile">
   <a class="<%= active === 'feed' ? 'active' : '' %>" href="/">Feed</a>
   <a class="<%= active === 'lab' ? 'active' : '' %>" href="/lab">Lab</a>

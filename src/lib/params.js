@@ -37,4 +37,14 @@ function parseSearchQuery(value) {
   return query
 }
 
-module.exports = { parseUsername, parseFid, parseCastHash, parseCursor, parseSearchQuery }
+function parseSearchInput(value) {
+  const displayQuery = parseSearchQuery(value)
+  if (!displayQuery) return { displayQuery: '', query: '', authorUsername: '' }
+  const match = displayQuery.match(/(?:^|\s)from:([^\s]+)(?:\s|$)/i)
+  if (!match) return { displayQuery, query: displayQuery, authorUsername: '' }
+  const authorUsername = parseUsername(match[1])
+  const query = parseSearchQuery(displayQuery.replace(match[0], ' ').replace(/\s+/g, ' ').trim())
+  return { displayQuery, query, authorUsername }
+}
+
+module.exports = { parseUsername, parseFid, parseCastHash, parseCursor, parseSearchQuery, parseSearchInput }

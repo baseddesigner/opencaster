@@ -1,0 +1,31 @@
+<% if (embed.type === 'image') { %>
+  <a class="embed-card image" href="<%= embed.url %>" target="_blank" rel="noopener noreferrer">
+    <% if (embed.imageUrl) { %><img src="<%= embed.imageUrl %>" alt="" loading="lazy"><% } %>
+    <span>Image</span>
+    <strong><%= embed.label %></strong>
+  </a>
+<% } else if (embed.type === 'video') { %>
+  <a class="embed-card video" href="<%= embed.url %>" target="_blank" rel="noopener noreferrer">
+    <span>Video</span>
+    <strong><%= embed.label %></strong>
+  </a>
+<% } else if (embed.type === 'quote') { %>
+  <a class="embed-card quote" href="<%= embed.localCastUrl %>">
+    <span>Quoted cast</span>
+    <strong><%= embed.label %></strong>
+    <small><%= embed.castHash %></small>
+  </a>
+<% } else if (embed.type === 'frame') { %>
+  <a class="embed-card frame" href="<%= embed.url %>" target="_blank" rel="noopener noreferrer">
+    <% if (embed.imageUrl) { %><img src="<%= embed.imageUrl %>" alt="" loading="lazy"><% } %>
+    <span>Frame preview · read-only</span>
+    <strong><%= embed.label %></strong>
+    <% if (embed.description) { %><small><%= embed.description %></small><% } %>
+  </a>
+<% } else { %>
+  <a class="embed-card link" href="<%= embed.url %>" target="_blank" rel="noopener noreferrer">
+    <span>Link</span>
+    <strong><%= embed.label %></strong>
+    <% if (embed.description) { %><small><%= embed.description %></small><% } %>
+  </a>
+<% } %>

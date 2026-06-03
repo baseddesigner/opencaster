@@ -13,4 +13,6 @@
     <a class="text-link" href="/cast/<%= encodeURIComponent(cast.hash) %>">Thread</a>
   <% } %>
 </div>
-<p class="cast-text"><%= cast.text %></p>
+<p class="cast-text">
+  <% (cast.richText && cast.richText.length ? cast.richText : [{ kind: 'text', text: cast.text }]).forEach((segment) => { %><% if (segment.href) { %><a class="cast-text-link <%= segment.kind %>" href="<%= segment.href %>" <%- segment.href.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : '' %>><%= segment.text %></a><% } else { %><%= segment.text %><% } %><% }) %>
+</p>

@@ -13,13 +13,18 @@
       <p class="eyebrow">Search</p>
       <h1>Find the cast that explains the room.</h1>
       <form class="search-form" action="/search" method="get">
-        <input name="q" value="<%= query %>" maxlength="120" placeholder="Search casts or users" autofocus>
+        <input name="q" value="<%= query %>" maxlength="120" placeholder="Search casts, users, or from:username base" autofocus>
         <select name="type">
           <option value="casts" <%= type === 'casts' ? 'selected' : '' %>>Casts</option>
           <option value="users" <%= type === 'users' ? 'selected' : '' %>>Users</option>
         </select>
         <button>Search</button>
       </form>
+      <div class="segmented search-tabs" aria-label="Search type">
+        <span>Search type</span>
+        <a class="<%= type === 'casts' ? 'active' : '' %>" href="/search?q=<%= encodeURIComponent(query) %>&type=casts">Casts</a>
+        <a class="<%= type === 'users' ? 'active' : '' %>" href="/search?q=<%= encodeURIComponent(query) %>&type=users">Users</a>
+      </div>
     </section>
     <% if (setupMessage) { %><%- include('../partials/empty-state', { message: setupMessage, detail: 'Switch to demo mode or plug credentials in later.' }) %><% } %>
     <% if (errorMessage) { %><%- include('../partials/error-state', { message: errorMessage }) %><% } %>

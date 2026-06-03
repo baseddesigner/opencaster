@@ -13,6 +13,14 @@
     <% if (errorMessage) { %><%- include('../partials/error-state', { message: errorMessage }) %><% } %>
     <% if (profile) { %>
       <%- include('../partials/profile-card', { profile }) %>
+      <div class="toolbar stacked-toolbar">
+        <div class="segmented" aria-label="Display">
+          <span>Display</span>
+          <% Object.entries(displayModes).forEach(([modeId, mode]) => { %>
+            <a class="<%= displayMode === modeId ? 'active' : '' %>" href="<%= displayModeHref(modeId) %>" title="<%= mode.description %>"><%= mode.label %></a>
+          <% }) %>
+        </div>
+      </div>
       <section class="discovery-module" aria-label="Author recent casts">
         <div class="section-head">
           <div>
@@ -21,7 +29,7 @@
           </div>
           <a class="text-link" href="/search?q=<%= encodeURIComponent(profile.username) %>&type=casts">Search mentions</a>
         </div>
-        <div class="feed-list">
+        <div class="feed-list display-<%= displayMode %>">
           <% casts.forEach((cast) => { %><%- include('../partials/feed-card', { cast: { ...cast, whyShown: discovery.recentWhy } }) %><% }) %>
           <% if (!casts.length) { %><%- include('../partials/empty-state', { message: 'No recent casts loaded for this profile.' }) %><% } %>
         </div>

@@ -53,7 +53,7 @@ const USERS = [
 const CASTS = [
   cast('demo-001', 'clawlinker', 'A Farcaster client should not start with a signer prompt. Start with the reading loop on Base: feed → profile → thread → search. If that loop is sharp, writes can earn their way in later.', 31, 64, 518, ['https://docs.farcaster.xyz']),
   cast('demo-002', 'baseddesigner', 'The winning client probably feels less like a social app and more like an operator console for attention: fast search, strong threads, clean context, zero casino chrome.', 13, 29, 231),
-  cast('demo-003', 'basebuilder', 'Base builders keep asking for the same thing: a feed that knows the difference between shipping notes, launch spam, and actual protocol changes.', 8, 19, 142, ['https://base.org']),
+  cast('demo-003', 'basebuilder', 'Base builders keep asking for the same thing: a feed that knows the difference between shipping notes, launch spam, and actual protocol changes. https://www.pawr.link/clawlinker-avatar.png', 8, 19, 142, ['https://www.pawr.link/clawlinker-avatar.png']),
   cast('demo-004', 'clawlinker', 'x402 makes paid API access feel native to agents. The product trick is not the payment. It is making the paid result worth more than the attention cost.', 17, 41, 286, ['https://www.pawr.link']),
   cast('demo-005', 'signalcartel', 'Market feed rule: lead with mcap, liquidity, and reason. If the post needs six paragraphs before the risk appears, the trade is already wearing a fake mustache.', 31, 18, 390),
   cast('demo-006', 'curator', 'Collecting interfaces should show provenance and social context in the same breath. A mint without surrounding taste is just a button with vibes taped on.', 6, 11, 96),
@@ -167,12 +167,14 @@ function createDemoProvider() {
       const replies = parent ? (REPLIES[parent.hash] || []).filter((item) => item.hash !== root.hash) : (REPLIES[root.hash] || [])
       return { cast: root, parent, replies }
     },
-    async searchCasts(query, { limit = 20, cursor = '' } = {}) {
+    async searchCasts(query, { limit = 20, cursor = '', authorUsername = '' } = {}) {
       if (String(query || '').toLowerCase() === 'error') throw new ProviderError('Demo provider error state.')
       const q = String(query || '').toLowerCase()
+      const author = String(authorUsername || '').toLowerCase()
       const all = filterCasts(query, 'trending')
       const searched = q ? all.filter((item) => `${item.text} ${item.author.username} ${item.author.display_name}`.toLowerCase().includes(q)) : all
-      const { page, nextCursor } = paginate(searched, limit, cursor)
+      const authored = author ? searched.filter((item) => item.author.username.toLowerCase() === author) : searched
+      const { page, nextCursor } = paginate(authored, limit, cursor)
       return { casts: page, nextCursor }
     },
     async searchUsers(query, { limit = 20 } = {}) {

@@ -124,6 +124,51 @@ test('profile, cast, and search routes render server-side pages', async () => {
   assert.match((await request(app).get('/search?q=carol&type=users').expect(200)).text, /Carol/)
 })
 
+test('feed route supports read-only Nook-style display modes and shortcut chrome', async () => {
+  const app = createApp({
+    provider: mockProvider({
+      fetchFeed: async () => ({
+        casts: [
+          { hash: '0ximage111', text: 'image cast', author: { username: 'alice' }, embeds: [{ url: 'https://example.com/art.jpg' }] },
+          { hash: '0xframe222', text: 'frame cast', author: { username: 'bob' }, embeds: [{ url: 'https://frames.example/app', metadata: { html: { frame: { version: 'vNext' }, ogTitle: 'Frame app' } } }] },
+          { hash: '0xplain333', text: 'plain cast', author: { username: 'carol' } }
+        ],
+        nextCursor: null
+      })
+    }),
+    config: baseConfig
+  })
+
+  const media = await request(app).get('/feed/builders?mode=media').expect(200)
+  assert.match(media.text, /Display/)
+  assert.match(media.text, /data-cast-card/)
+  assert.match(media.text, /image cast/)
+  assert.doesNotMatch(media.text, /plain cast/)
+
+  const frames = await request(app).get('/feed/builders?mode=frames').expect(200)
+  assert.match(frames.text, /frame cast/)
+  assert.doesNotMatch(frames.text, /image cast/)
+})
+
+test('search supports from:username cast filtering and type tabs', async () => {
+  const calls = []
+  const app = createApp({
+    provider: mockProvider({
+      searchCasts: async (query, options) => {
+        calls.push({ query, authorUsername: options.authorUsername })
+        return { casts: [{ hash: '0xsearch', text: `${query} by ${options.authorUsername}`, author: { username: options.authorUsername } }], nextCursor: null }
+      }
+    }),
+    config: baseConfig
+  })
+
+  const res = await request(app).get('/search?q=from:alice%20base&type=casts').expect(200)
+  assert.deepEqual(calls, [{ query: 'base', authorUsername: 'alice' }])
+  assert.match(res.text, /from:alice base/)
+  assert.match(res.text, /Search type/)
+  assert.match(res.text, /by alice/)
+})
+
 test('no generic provider proxy exists', async () => {
   const app = createApp({ provider: mockProvider(), config: baseConfig })
   await request(app).get('/api/neynar/v2/farcaster/feed').expect(404)
@@ -218,6 +263,25 @@ test('profile route renders explainable recent and related discovery modules', a
   assert.match(res.text, /Related casts/)
   assert.match(res.text, /related protocol cast/)
   assert.match(res.text, /Why shown/)
+})
+
+test('profile route supports media display mode for authored casts', async () => {
+  const app = createApp({
+    provider: mockProvider({
+      fetchUserByUsername: async () => ({ fid: 42, username: 'alice', display_name: 'Alice' }),
+      fetchUserCasts: async () => ({ casts: [
+        { hash: '0xmedia111', text: 'media profile cast', author: { username: 'alice' }, embeds: [{ url: 'https://example.com/a.png' }] },
+        { hash: '0xplain111', text: 'plain profile cast', author: { username: 'alice' } }
+      ] }),
+      searchCasts: async () => ({ casts: [] })
+    }),
+    config: baseConfig
+  })
+
+  const res = await request(app).get('/u/alice?mode=media').expect(200)
+  assert.match(res.text, /Display/)
+  assert.match(res.text, /media profile cast/)
+  assert.doesNotMatch(res.text, /plain profile cast/)
 })
 
 test('routes reject invalid path/query params before provider calls', async () => {
