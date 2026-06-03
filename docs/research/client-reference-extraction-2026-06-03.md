@@ -16,6 +16,8 @@ Related research:
 
 Use the repos as references, not dependencies. Both are no-license/unclear-license dumps, so Opencaster should extract product and architecture patterns only.
 
+Implementation status: the read-only extraction pass landed in `dd0a184` with rich cast text, classified embeds, feed/profile display modes, keyboard shortcuts, `from:` search parsing, and safe outbound actions. Scheduling/composer work remains gated behind write-safety.
+
 Near-term priority: take Nook's frontend density and Supercast's read-only keyboard/feed/search polish. Defer Supercast-style scheduling until we intentionally cross the write-safety boundary.
 
 ## What to take from Nook first
