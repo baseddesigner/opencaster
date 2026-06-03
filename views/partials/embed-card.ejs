@@ -8,17 +8,26 @@
   <a class="embed-card video" href="<%= embed.url %>" target="_blank" rel="noopener noreferrer">
     <span>Video</span>
     <strong><%= embed.label %></strong>
+    <% if (embed.description) { %><small><%= embed.description %></small><% } %>
   </a>
 <% } else if (embed.type === 'quote') { %>
   <a class="embed-card quote" href="<%= embed.localCastUrl %>">
     <span>Quoted cast</span>
     <strong><%= embed.label %></strong>
-    <small><%= embed.castHash %></small>
+    <% if (embed.quotePreview) { %>
+      <div class="quote-preview">
+        <b><%= embed.quotePreview.author %></b>
+        <small>@<%= embed.quotePreview.username %></small>
+        <% if (embed.quotePreview.text) { %><p><%= embed.quotePreview.text %></p><% } %>
+      </div>
+    <% } else { %>
+      <small><%= embed.castHash %></small>
+    <% } %>
   </a>
 <% } else if (embed.type === 'frame') { %>
   <a class="embed-card frame" href="<%= embed.url %>" target="_blank" rel="noopener noreferrer">
     <% if (embed.imageUrl) { %><img src="<%= embed.imageUrl %>" alt="" loading="lazy"><% } %>
-    <span>Frame preview · read-only</span>
+    <span>Read-only frame</span>
     <strong><%= embed.label %></strong>
     <% if (embed.description) { %><small><%= embed.description %></small><% } %>
   </a>

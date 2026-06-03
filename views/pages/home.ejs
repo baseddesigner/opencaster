@@ -40,14 +40,22 @@
       <div class="toolbar stacked-toolbar">
         <div class="segmented" aria-label="Ranking">
           <span>Ranking</span>
-          <a class="<%= (rank || 'signal') === 'signal' ? 'active' : '' %>" href="/feed/<%= feedId %>?rank=signal<%= displayMode !== 'casts' ? `&mode=${encodeURIComponent(displayMode)}` : '' %>">Signal</a>
-          <a class="<%= rank === 'recent' ? 'active' : '' %>" href="/feed/<%= feedId %>?rank=recent<%= displayMode !== 'casts' ? `&mode=${encodeURIComponent(displayMode)}` : '' %>">Recent</a>
+          <a class="<%= (rank || 'signal') === 'signal' ? 'active' : '' %>" href="<%= feedHref({ rank: 'signal', cursor: '' }) %>">Signal</a>
+          <a class="<%= rank === 'recent' ? 'active' : '' %>" href="<%= feedHref({ rank: 'recent', cursor: '' }) %>">Recent</a>
         </div>
         <div class="segmented" aria-label="Display">
           <span>Display</span>
           <% Object.entries(displayModes).forEach(([modeId, mode]) => { %>
             <a class="<%= displayMode === modeId ? 'active' : '' %>" href="<%= displayModeHref(modeId) %>" title="<%= mode.description %>"><%= mode.label %></a>
           <% }) %>
+        </div>
+        <div class="segmented feed-controls" aria-label="Feed controls">
+          <span>Replies</span>
+          <a class="<%= feedControls.replies !== 'hide' ? 'active' : '' %>" href="<%= feedControlHref('replies', 'show') %>">Show</a>
+          <a class="<%= feedControls.replies === 'hide' ? 'active' : '' %>" href="<%= feedControlHref('replies', 'hide') %>">Hide</a>
+          <span>Recasts</span>
+          <a class="<%= feedControls.recasts !== 'hide' ? 'active' : '' %>" href="<%= feedControlHref('recasts', 'show') %>">Show</a>
+          <a class="<%= feedControls.recasts === 'hide' ? 'active' : '' %>" href="<%= feedControlHref('recasts', 'hide') %>">Hide</a>
         </div>
         <a class="text-link" href="/search?q=<%= encodeURIComponent(feed.query || feed.label) %>&type=casts">Search this lane</a>
       </div>
@@ -61,15 +69,15 @@
 
       <section class="feed-list display-<%= displayMode %>">
         <% if (casts.length === 0 && !setupMessage && !errorMessage) { %>
-          <%- include('../partials/empty-state', { message: displayMode === 'casts' ? 'No casts found yet.' : `No ${displayModes[displayMode].label.toLowerCase()} casts in this page.`, detail: 'Try another display mode, feed, or search query.' }) %>
+          <%- include('../partials/empty-state', { message: displayMode === 'casts' ? 'No casts match this view.' : `No ${displayModes[displayMode].label.toLowerCase()} casts match this view.`, detail: (feedControls.replies === 'hide' || feedControls.recasts === 'hide') ? 'Current reply/recast filters may be hiding this page. Toggle them above or try another mode.' : 'Try another display mode, feed, or search query.' }) %>
         <% } %>
         <% casts.forEach((cast) => { %>
-          <%- include('../partials/feed-card', { cast }) %>
+          <%- include('../partials/feed-card', { cast, displayMode }) %>
         <% }) %>
       </section>
 
       <% if (nextCursor) { %>
-        <a class="more" href="/feed/<%= feedId %>?cursor=<%= encodeURIComponent(nextCursor) %>&rank=<%= encodeURIComponent(rank || 'signal') %><%= displayMode !== 'casts' ? `&mode=${encodeURIComponent(displayMode)}` : '' %>">More</a>
+        <a class="more" href="<%= feedHref({ cursor: nextCursor }) %>">More</a>
       <% } %>
     </section>
 

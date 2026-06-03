@@ -143,10 +143,12 @@ test('feed route supports read-only Nook-style display modes and shortcut chrome
   assert.match(media.text, /Display/)
   assert.match(media.text, /data-cast-card/)
   assert.match(media.text, /image cast/)
+  assert.match(media.text, /class="image-grid count-1"/)
   assert.doesNotMatch(media.text, /plain cast/)
 
   const frames = await request(app).get('/feed/builders?mode=frames').expect(200)
   assert.match(frames.text, /frame cast/)
+  assert.match(frames.text, /Read-only frame/)
   assert.doesNotMatch(frames.text, /image cast/)
 })
 
@@ -166,6 +168,8 @@ test('search supports from:username cast filtering and type tabs', async () => {
   assert.deepEqual(calls, [{ query: 'base', authorUsername: 'alice' }])
   assert.match(res.text, /from:alice base/)
   assert.match(res.text, /Search type/)
+  assert.match(res.text, /From @alice/)
+  assert.match(res.text, /Clear author filter/)
   assert.match(res.text, /by alice/)
 })
 
@@ -336,6 +340,50 @@ test('feed lab rejects unknown feed ids instead of silently defaulting', async (
   const app = createApp({ provider: mockProvider(), config: baseConfig })
   const res = await request(app).get('/lab?feed=nope').expect(404)
   assert.match(res.text, /Feed not found/)
+})
+
+test('channel route renders a read-only channel lane when provider data exists', async () => {
+  const calls = []
+  const app = createApp({
+    provider: mockProvider({
+      fetchChannelFeed: async ({ channelId, limit }) => {
+        calls.push({ channelId, limit })
+        return { casts: [{ hash: '0xchannel1', text: 'channel cast', author: { username: 'alice' } }], nextCursor: null }
+      }
+    }),
+    config: baseConfig
+  })
+
+  const res = await request(app).get('/channel/builders').expect(200)
+  assert.deepEqual(calls, [{ channelId: 'builders', limit: 20 }])
+  assert.match(res.text, /Channel \/builders/)
+  assert.match(res.text, /read-only channel lane/i)
+  assert.match(res.text, /channel cast/)
+})
+
+test('feed controls can hide replies and recasts without adding write actions', async () => {
+  const app = createApp({
+    provider: mockProvider({
+      fetchFeed: async () => ({
+        casts: [
+          { hash: '0xroot1111', text: 'root cast', author: { username: 'alice' } },
+          { hash: '0xreply111', text: 'reply cast', parent_hash: '0xroot1111', author: { username: 'bob' } },
+          { hash: '0xrecast11', text: 'recast cast', recasted_cast: { hash: '0xroot2222' }, author: { username: 'carol' } }
+        ],
+        nextCursor: null
+      })
+    }),
+    config: baseConfig
+  })
+
+  const res = await request(app).get('/feed/builders?replies=hide&recasts=hide').expect(200)
+  assert.match(res.text, /Replies/)
+  assert.match(res.text, /Recasts/)
+  assert.match(res.text, /root cast/)
+  assert.doesNotMatch(res.text, /reply cast/)
+  assert.doesNotMatch(res.text, /recast cast/)
+  assert.match(res.text, /Compose \/ Publish disabled/)
+  assert.doesNotMatch(res.text, /<form[^>]+action="[^\"]*(compose|publish|draft|send)/i)
 })
 
 test('feed and lab reuse cached provider payloads across presentation modes', async () => {

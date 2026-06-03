@@ -13,12 +13,19 @@ document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => {
 const overlay = document.querySelector('[data-shortcuts-overlay]')
 const shortcutToggle = document.querySelector('[data-shortcuts-toggle]')
 const shortcutClose = document.querySelector('[data-shortcuts-close]')
+const commandPalette = document.querySelector('[data-command-palette]')
+const commandClose = document.querySelector('[data-command-close]')
 let selectedCastIndex = -1
+let selectedCommandIndex = -1
 let pendingGotoKey = false
 let gotoTimer = null
 
 function visibleCastCards() {
   return Array.from(document.querySelectorAll('[data-cast-card]')).filter((card) => card.offsetParent !== null)
+}
+
+function commandItems() {
+  return Array.from(document.querySelectorAll('[data-command-item]')).filter((item) => !item.disabled)
 }
 
 function selectCast(index) {
@@ -52,6 +59,27 @@ function setOverlay(open) {
   overlay.hidden = !open
 }
 
+function setCommandPalette(open) {
+  if (!commandPalette) return
+  commandPalette.hidden = !open
+  selectedCommandIndex = -1
+  if (open) selectCommand(0)
+}
+
+function selectCommand(index) {
+  const items = commandItems()
+  if (!items.length) return
+  selectedCommandIndex = Math.max(0, Math.min(index, items.length - 1))
+  items[selectedCommandIndex].focus({ preventScroll: true })
+}
+
+function moveCommand(delta) {
+  const items = commandItems()
+  if (!items.length) return
+  const current = selectedCommandIndex < 0 ? (delta > 0 ? -1 : items.length) : selectedCommandIndex
+  selectCommand(current + delta)
+}
+
 function focusSearch() {
   const input = document.querySelector('.quick-search input[name="q"], .search-form input[name="q"]')
   if (input) input.focus()
@@ -67,15 +95,40 @@ shortcutClose?.addEventListener('click', () => setOverlay(false))
 overlay?.addEventListener('click', (event) => {
   if (event.target === overlay) setOverlay(false)
 })
+commandClose?.addEventListener('click', () => setCommandPalette(false))
+commandPalette?.addEventListener('click', (event) => {
+  if (event.target === commandPalette) setCommandPalette(false)
+})
 
 document.addEventListener('keydown', (event) => {
   const target = event.target
   const isTyping = target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+  const paletteOpen = commandPalette && !commandPalette.hidden
+
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+    event.preventDefault()
+    setCommandPalette(!paletteOpen)
+    return
+  }
+
   if (event.key === 'Escape') {
     setOverlay(false)
+    setCommandPalette(false)
     pendingGotoKey = false
     return
   }
+
+  if (paletteOpen) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      moveCommand(1)
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      moveCommand(-1)
+    }
+    return
+  }
+
   if (isTyping) return
 
   if (pendingGotoKey) {
@@ -107,3 +160,5 @@ document.addEventListener('keydown', (event) => {
     gotoTimer = setTimeout(() => { pendingGotoKey = false }, 900)
   }
 })
+
+// Publish and Compose are intentionally present only as disabled palette copy.

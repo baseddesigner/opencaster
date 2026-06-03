@@ -1,10 +1,20 @@
 const { resolveFeedId } = require('../config')
 const { normalizeFeedResponse } = require('../lib/view-models')
-const { DISPLAY_MODES, displayModeHref, filterCastsForDisplayMode, normalizeDisplayMode } = require('../lib/display-modes')
+const { parseChannelId } = require('../lib/params')
+const {
+  DISPLAY_MODES,
+  displayModeHref,
+  feedControlHref,
+  filterCastsForDisplayMode,
+  filterCastsForFeedControls,
+  normalizeDisplayMode,
+  normalizeFeedControls
+} = require('../lib/display-modes')
 
 function registerHomeRoutes(app, ctx) {
   app.get('/', (req, res, next) => renderFeed(req, res, next, ctx, ctx.config.defaultFeed || 'builders'))
   app.get('/feed/:feedId', (req, res, next) => renderFeed(req, res, next, ctx, req.params.feedId))
+  app.get('/channel/:channelId', (req, res, next) => renderChannel(req, res, next, ctx))
 }
 
 async function loadFeedPayload({ ctx, feed, feedId, cursor }) {
@@ -35,6 +45,17 @@ async function loadFeedPayload({ ctx, feed, feedId, cursor }) {
   return normalized
 }
 
+async function loadChannelPayload({ ctx, channelId, cursor }) {
+  const ttl = ctx.config.cacheTtlSeconds * 1000
+  const key = `channel:${ctx.provider.name}:${channelId}:${cursor}`
+  const payload = await ctx.cache.cached(key, ttl, async () => {
+    if (ctx.provider.fetchChannelFeed) return ctx.provider.fetchChannelFeed({ channelId, limit: 20, cursor })
+    if (ctx.provider.searchCasts) return ctx.provider.searchCasts(`/${channelId}`, { limit: 20, cursor })
+    return ctx.provider.fetchFeed({ feedId: channelId, query: `/${channelId}`, limit: 20, cursor })
+  })
+  return normalizeFeedResponse(payload)
+}
+
 async function renderFeed(req, res, next, ctx, feedId) {
   const resolvedFeedId = resolveFeedId(feedId, ctx.config.feeds)
   const feed = ctx.config.feeds[resolvedFeedId]
@@ -47,17 +68,22 @@ async function renderFeed(req, res, next, ctx, feedId) {
     })
   }
 
+  const cursor = req.query.cursor || ''
+  const rank = req.query.rank === 'recent' ? 'recent' : 'signal'
+  const displayMode = normalizeDisplayMode(req.query.mode)
+  const feedControls = normalizeFeedControls(req.query)
+  const basePath = `/feed/${resolvedFeedId}`
+
   if (!ctx.provider.ready) {
-    const displayMode = normalizeDisplayMode(req.query.mode)
-    return res.render('pages/home', {
+    return renderFeedPage(res, {
       title: `${feed.label} feed`,
-      active: 'feed',
       feedId: resolvedFeedId,
       feed,
-      rank: 'signal',
+      rank,
       displayMode,
-      displayModes: DISPLAY_MODES,
-      displayModeHref: (targetMode) => displayModeHref(`/feed/${resolvedFeedId}`, { rank: 'signal', mode: displayMode }, targetMode),
+      feedControls,
+      basePath,
+      cursor,
       casts: [],
       totalCasts: 0,
       nextCursor: null,
@@ -67,23 +93,17 @@ async function renderFeed(req, res, next, ctx, feedId) {
   }
 
   try {
-    const cursor = req.query.cursor || ''
-    const rank = req.query.rank === 'recent' ? 'recent' : 'signal'
-    const displayMode = normalizeDisplayMode(req.query.mode)
     const normalized = await loadFeedPayload({ ctx, feed, feedId: resolvedFeedId, cursor })
-    const rankedCasts = rank === 'recent'
-      ? [...normalized.casts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      : [...normalized.casts].sort((a, b) => b.engagementScore - a.engagementScore)
-    const casts = filterCastsForDisplayMode(rankedCasts, displayMode)
-    res.render('pages/home', {
+    const casts = presentCasts(normalized.casts, { rank, displayMode, feedControls })
+    renderFeedPage(res, {
       title: `${feed.label} feed`,
-      active: 'feed',
       feedId: resolvedFeedId,
       feed,
       rank,
       displayMode,
-      displayModes: DISPLAY_MODES,
-      displayModeHref: (targetMode) => displayModeHref(`/feed/${resolvedFeedId}`, { rank, cursor, mode: displayMode }, targetMode),
+      feedControls,
+      basePath,
+      cursor,
       casts,
       totalCasts: normalized.casts.length,
       nextCursor: normalized.nextCursor,
@@ -91,16 +111,15 @@ async function renderFeed(req, res, next, ctx, feedId) {
       errorMessage: ''
     })
   } catch (err) {
-    const displayMode = normalizeDisplayMode(req.query.mode)
-    res.render('pages/home', {
+    renderFeedPage(res, {
       title: `${feed.label} feed`,
-      active: 'feed',
       feedId: resolvedFeedId,
       feed,
       rank: 'signal',
       displayMode,
-      displayModes: DISPLAY_MODES,
-      displayModeHref: (targetMode) => displayModeHref(`/feed/${resolvedFeedId}`, { rank: 'signal', mode: displayMode }, targetMode),
+      feedControls,
+      basePath,
+      cursor: '',
       casts: [],
       totalCasts: 0,
       nextCursor: null,
@@ -110,4 +129,121 @@ async function renderFeed(req, res, next, ctx, feedId) {
   }
 }
 
-module.exports = { registerHomeRoutes, loadFeedPayload }
+async function renderChannel(req, res, next, ctx) {
+  let channelId
+  try {
+    channelId = parseChannelId(req.params.channelId)
+  } catch (err) {
+    return next(err)
+  }
+  const cursor = req.query.cursor || ''
+  const rank = req.query.rank === 'recent' ? 'recent' : 'signal'
+  const displayMode = normalizeDisplayMode(req.query.mode)
+  const feedControls = normalizeFeedControls(req.query)
+  const basePath = `/channel/${channelId}`
+  const feed = {
+    label: `Channel /${channelId}`,
+    shortLabel: `/${channelId}`,
+    description: `Read-only channel lane for /${channelId}. Uses provider channel data when available, with search fallback only for reads.`,
+    mode: 'channel',
+    query: `/${channelId}`,
+    accent: 'Channel lane'
+  }
+
+  if (!ctx.provider.ready) {
+    return renderFeedPage(res, {
+      title: `Channel /${channelId}`,
+      feedId: `channel-${channelId}`,
+      feed,
+      rank,
+      displayMode,
+      feedControls,
+      basePath,
+      cursor,
+      casts: [],
+      totalCasts: 0,
+      nextCursor: null,
+      setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.',
+      errorMessage: ''
+    })
+  }
+
+  try {
+    const normalized = await loadChannelPayload({ ctx, channelId, cursor })
+    const casts = presentCasts(normalized.casts, { rank, displayMode, feedControls })
+    renderFeedPage(res, {
+      title: `Channel /${channelId}`,
+      feedId: `channel-${channelId}`,
+      feed,
+      rank,
+      displayMode,
+      feedControls,
+      basePath,
+      cursor,
+      casts,
+      totalCasts: normalized.casts.length,
+      nextCursor: normalized.nextCursor,
+      setupMessage: '',
+      errorMessage: ''
+    })
+  } catch (err) {
+    renderFeedPage(res, {
+      title: `Channel /${channelId}`,
+      feedId: `channel-${channelId}`,
+      feed,
+      rank,
+      displayMode,
+      feedControls,
+      basePath,
+      cursor,
+      casts: [],
+      totalCasts: 0,
+      nextCursor: null,
+      setupMessage: '',
+      errorMessage: err.message || 'Channel data is unavailable right now.'
+    })
+  }
+}
+
+function presentCasts(casts, { rank, displayMode, feedControls }) {
+  const rankedCasts = rank === 'recent'
+    ? [...casts].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    : [...casts].sort((a, b) => b.engagementScore - a.engagementScore)
+  return filterCastsForFeedControls(filterCastsForDisplayMode(rankedCasts, displayMode), feedControls)
+}
+
+function renderFeedPage(res, state) {
+  const queryState = { rank: state.rank, cursor: state.cursor, mode: state.displayMode, ...state.feedControls }
+  const feedHref = (next = {}) => {
+    const params = new URLSearchParams()
+    const merged = { ...queryState, ...next }
+    for (const [key, value] of Object.entries(merged)) {
+      if (value === undefined || value === null || value === '') continue
+      if (key === 'mode' && normalizeDisplayMode(value) === 'casts') continue
+      if ((key === 'replies' || key === 'recasts') && value !== 'hide') continue
+      params.set(key, String(value))
+    }
+    const suffix = params.toString()
+    return suffix ? `${state.basePath}?${suffix}` : state.basePath
+  }
+  return res.render('pages/home', {
+    title: state.title,
+    active: 'feed',
+    feedId: state.feedId,
+    feed: state.feed,
+    rank: state.rank,
+    displayMode: state.displayMode,
+    displayModes: DISPLAY_MODES,
+    feedControls: state.feedControls,
+    feedHref,
+    displayModeHref: (targetMode) => displayModeHref(state.basePath, queryState, targetMode),
+    feedControlHref: (controlName, targetValue) => feedControlHref(state.basePath, queryState, controlName, targetValue),
+    casts: state.casts,
+    totalCasts: state.totalCasts,
+    nextCursor: state.nextCursor,
+    setupMessage: state.setupMessage,
+    errorMessage: state.errorMessage
+  })
+}
+
+module.exports = { registerHomeRoutes, loadFeedPayload, loadChannelPayload }

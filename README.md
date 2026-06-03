@@ -154,6 +154,7 @@ If you find a vulnerability, see [SECURITY.md](SECURITY.md).
 - [`docs/UI-ITERATIONS.md`](docs/UI-ITERATIONS.md) — visual iterations and UI rubric.
 - [`docs/PRODUCTION-CHECKLIST.md`](docs/PRODUCTION-CHECKLIST.md) — production readiness gates.
 - [`docs/architecture/provider-contract.md`](docs/architecture/provider-contract.md) — provider interface, response shapes, errors, diagnostics, and tests.
+- [`docs/architecture/write-safety.md`](docs/architecture/write-safety.md) — future write-mode gates; current app stays read-only.
 - [`docs/research/snapchain-cassie-2026-05-27/`](docs/research/snapchain-cassie-2026-05-27/) — Cassie/Hypersnap/Snapchain research.
 - [`docs/research/nook-2026-06-03.md`](docs/research/nook-2026-06-03.md) — lessons from Nook's Farcaster client architecture and UX.
 - [`docs/research/supercast-2026-06-03.md`](docs/research/supercast-2026-06-03.md) — lessons from Supercast's drafts, scheduling, composer, and product systems.

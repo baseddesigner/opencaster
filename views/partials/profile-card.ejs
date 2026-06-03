@@ -1,17 +1,23 @@
-<article class="profile-card">
+<article class="profile-card dense-profile">
   <img class="avatar large" src="<%= profile.pfpUrl %>" alt="" loading="lazy">
   <div class="profile-main">
     <div class="profile-title-row">
-      <h2><%= profile.displayName %></h2>
+      <div>
+        <h2><%= profile.displayName %></h2>
+        <p class="muted handle">@<%= profile.username %></p>
+      </div>
       <% if (profile.fid) { %><span class="pill">FID <%= profile.fid %></span><% } %>
     </div>
-    <p class="muted handle">@<%= profile.username %></p>
     <% if (profile.bio) { %><p class="profile-bio"><%= profile.bio %></p><% } %>
-    <div class="profile-stats">
+    <div class="profile-stats dense-stats">
       <span><strong><%= profile.followerCountLabel %></strong> followers</span>
       <span><strong><%= profile.followingCountLabel %></strong> following</span>
+      <span><strong>read-only</strong> local view</span>
     </div>
-    <a class="text-link" href="/u/<%= encodeURIComponent(profile.username) %>">View locally</a>
-    <a class="text-link" href="<%= profile.farcasterUrl %>" target="_blank" rel="noopener noreferrer">Open profile in Farcaster</a>
+    <div class="actions compact-actions">
+      <a class="text-link" href="/u/<%= encodeURIComponent(profile.username) %>">View locally</a>
+      <a class="text-link" href="/search?q=<%= encodeURIComponent(`from:${profile.username}`) %>&type=casts">Casts by @<%= profile.username %></a>
+      <a class="text-link" href="<%= profile.farcasterUrl %>" target="_blank" rel="noopener noreferrer">Open in Farcaster</a>
+    </div>
   </div>
 </article>

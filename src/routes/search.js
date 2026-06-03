@@ -15,26 +15,46 @@ function registerSearchRoutes(app, ctx) {
       authorUsername = parsedSearch.authorUsername
       cursor = parseCursor(req.query.cursor || '')
     } catch (err) {
-      return res.status(err.status || 400).render('pages/search', { title: 'Search', active: 'search', query: String(req.query.q || '').slice(0, 120), type, casts: [], users: [], nextCursor: null, setupMessage: '', errorMessage: err.message || 'Search request is invalid.' })
+      return renderSearch(res.status(err.status || 400), { query: String(req.query.q || '').slice(0, 120), type, errorMessage: err.message || 'Search request is invalid.' })
     }
 
     if (!displayQuery) {
-      return res.render('pages/search', { title: 'Search', active: 'search', query: '', type, casts: [], users: [], nextCursor: null, setupMessage: '', errorMessage: '' })
+      return renderSearch(res, { query: '', type })
     }
     if (!ctx.provider.ready) {
-      return res.render('pages/search', { title: 'Search', active: 'search', query: displayQuery, type, casts: [], users: [], nextCursor: null, setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.', errorMessage: '' })
+      return renderSearch(res, { query: displayQuery, queryTerm: query, authorUsername, type, setupMessage: ctx.provider.setupMessage || ctx.config.providerSetupMessage || 'Provider setup required.' })
     }
     try {
       if (type === 'users') {
         const payload = await ctx.cache.cached(`search-users:${ctx.provider.name}:${query}`, ctx.config.cacheTtlSeconds * 1000, async () => ctx.provider.searchUsers(query, { limit: 20 }))
-        return res.render('pages/search', { title: 'Search users', active: 'search', query: displayQuery, type, casts: [], users: normalizeSearchUsers(payload), nextCursor: null, setupMessage: '', errorMessage: '' })
+        return renderSearch(res, { title: 'Search users', query: displayQuery, queryTerm: query, authorUsername, type, users: normalizeSearchUsers(payload) })
       }
       const payload = await ctx.cache.cached(`search-casts:${ctx.provider.name}:${query}:${authorUsername}:${cursor}`, ctx.config.cacheTtlSeconds * 1000, async () => ctx.provider.searchCasts(query, { limit: 3, cursor, authorUsername }))
       const normalized = normalizeFeedResponse(payload)
-      res.render('pages/search', { title: 'Search casts', active: 'search', query: displayQuery, type, casts: normalized.casts, users: [], nextCursor: normalized.nextCursor, setupMessage: '', errorMessage: '' })
+      renderSearch(res, { title: 'Search casts', query: displayQuery, queryTerm: query, authorUsername, type, casts: normalized.casts, nextCursor: normalized.nextCursor })
     } catch (err) {
-      res.status(err.status || 200).render('pages/search', { title: 'Search', active: 'search', query: displayQuery, type, casts: [], users: [], nextCursor: null, setupMessage: '', errorMessage: err.message || 'Search is unavailable right now.' })
+      renderSearch(res.status(err.status || 200), { query: displayQuery, queryTerm: query, authorUsername, type, errorMessage: err.message || 'Search is unavailable right now.' })
     }
+  })
+}
+
+function renderSearch(res, state = {}) {
+  const query = state.query || ''
+  const queryTerm = state.queryTerm ?? query
+  const authorUsername = state.authorUsername || ''
+  return res.render('pages/search', {
+    title: state.title || 'Search',
+    active: 'search',
+    query,
+    queryTerm,
+    authorUsername,
+    clearAuthorHref: authorUsername ? `/search?q=${encodeURIComponent(queryTerm)}&type=casts` : '',
+    type: state.type || 'casts',
+    casts: state.casts || [],
+    users: state.users || [],
+    nextCursor: state.nextCursor || null,
+    setupMessage: state.setupMessage || '',
+    errorMessage: state.errorMessage || ''
   })
 }
 

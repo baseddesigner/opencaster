@@ -12,3 +12,12 @@ test('keyboard navigation script exposes Supercast-style read-only shortcuts', (
   assert.match(js, /event\.key === '\?'/)
   assert.match(js, /pendingGotoKey/)
 })
+
+test('keyboard script keeps command palette read-only and input-safe', () => {
+  const js = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8')
+  assert.match(js, /data-command-palette/)
+  assert.match(js, /metaKey|ctrlKey/)
+  assert.match(js, /data-command-item/)
+  assert.match(js, /Publish|Compose/)
+  assert.match(js, /disabled/i)
+})

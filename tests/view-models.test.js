@@ -1,7 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { toCastCard, toProfileCard, normalizeFeedResponse } = require('../src/lib/view-models')
+const { toCastCard, toProfileCard, normalizeFeedResponse, normalizeEmbeds } = require('../src/lib/view-models')
 
 test('toCastCard normalizes missing fields safely', () => {
   const card = toCastCard({ hash: '0xabc', text: '<script>alert(1)</script>' })
@@ -48,4 +48,61 @@ test('toCastCard classifies rich embeds and hides displayed embed URLs from text
 test('view models filter unsafe avatar URLs and expose parent context', () => {
   const card = toCastCard({ hash: '0xunsafe', author: { username: 'bad', pfp_url: 'javascript:alert(1)' } })
   assert.equal(card.author.pfpUrl, '/favicon.svg')
+})
+
+test('toCastCard supports Nook-style mention/channel positions and metadata embeds', () => {
+  const text = 'gm @alice /builders https://example.com/one.jpg \uFFFC'
+  const card = toCastCard({
+    hash: '0xnook1234',
+    text,
+    user: { username: 'bob', displayName: 'Bob', pfp: 'https://example.com/bob.jpg' },
+    mentions: [{ position: Buffer.byteLength('gm ', 'utf8'), user: { username: 'alice', fid: 1 } }],
+    channelMentions: [{ position: Buffer.byteLength('gm @alice ', 'utf8'), channel: { channelId: 'builders', name: 'Builders' } }],
+    embeds: [{ uri: 'https://example.com/one.jpg', contentType: 'image/jpeg' }]
+  })
+
+  assert.equal(card.author.displayName, 'Bob')
+  assert.equal(card.author.pfpUrl, 'https://example.com/bob.jpg')
+  assert.deepEqual(card.richText.filter((segment) => segment.href).map((segment) => [segment.kind, segment.text, segment.href]), [
+    ['mention', '@alice', '/u/alice'],
+    ['channel', '/builders', '/channel/builders']
+  ])
+  assert.equal(card.richText.map((segment) => segment.text).join('').includes('one.jpg'), false)
+  assert.equal(card.richText.map((segment) => segment.text).join('').includes('\uFFFC'), false)
+})
+
+test('normalizeEmbeds handles Nook-style media, missing embed URLs, and quote previews', () => {
+  const embeds = normalizeEmbeds([
+    { uri: 'https://example.com/a.jpg', contentType: 'image/jpeg' },
+    { uri: 'https://example.com/video.m3u8', contentType: 'application/x-mpegURL', metadata: { title: 'Stream' } },
+    { uri: 'https://frames.example/start', frame: { buttons: [{ title: 'Open' }] }, metadata: { title: 'Frame app', description: 'read-only frame' } },
+    { cast: { hash: '0xquote1234', text: 'quoted cast text', user: { username: 'carol', displayName: 'Carol' }, timestamp: '2026-01-01T00:00:00.000Z' } }
+  ], { embedUrls: ['https://example.com/a.jpg', 'https://example.com/missing'] })
+
+  assert.deepEqual(embeds.map((embed) => embed.type), ['image', 'video', 'frame', 'quote', 'link'])
+  assert.equal(embeds[1].title, 'Stream')
+  assert.equal(embeds[2].label, 'Frame app')
+  assert.deepEqual(embeds[3].quotePreview, { author: 'Carol', username: 'carol', text: 'quoted cast text' })
+  assert.equal(embeds[4].url, 'https://example.com/missing')
+})
+
+test('toCastCard exposes image grids plus reply and recast metadata for feed controls', () => {
+  const card = toCastCard({
+    hash: '0xmedia1234',
+    text: 'media reply',
+    author: { username: 'alice' },
+    parent_hash: '0xparent1234',
+    recasted_cast: { hash: '0xoriginal' },
+    embeds: [
+      { uri: 'https://example.com/a.jpg', contentType: 'image/jpeg' },
+      { uri: 'https://example.com/b.jpg', contentType: 'image/jpeg' },
+      { uri: 'https://example.com/story', metadata: { title: 'Story' } }
+    ]
+  })
+
+  assert.equal(card.isReply, true)
+  assert.equal(card.isRecast, true)
+  assert.equal(card.imageEmbeds.length, 2)
+  assert.equal(card.detailEmbeds.length, 1)
+  assert.equal(card.hasImageGrid, true)
 })

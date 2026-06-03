@@ -25,6 +25,13 @@
         <a class="<%= type === 'casts' ? 'active' : '' %>" href="/search?q=<%= encodeURIComponent(query) %>&type=casts">Casts</a>
         <a class="<%= type === 'users' ? 'active' : '' %>" href="/search?q=<%= encodeURIComponent(query) %>&type=users">Users</a>
       </div>
+      <% if (authorUsername) { %>
+        <div class="search-refinements" aria-label="Search refinements">
+          <span class="pill">From @<%= authorUsername %></span>
+          <% if (queryTerm) { %><span class="pill subtle">Text: <%= queryTerm %></span><% } %>
+          <a class="text-link" href="<%= clearAuthorHref %>">Clear author filter</a>
+        </div>
+      <% } %>
     </section>
     <% if (setupMessage) { %><%- include('../partials/empty-state', { message: setupMessage, detail: 'Switch to demo mode or plug credentials in later.' }) %><% } %>
     <% if (errorMessage) { %><%- include('../partials/error-state', { message: errorMessage }) %><% } %>

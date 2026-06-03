@@ -28,7 +28,19 @@
       <div><dt>g h</dt><dd>Go home</dd></div>
       <div><dt>g s</dt><dd>Go search</dd></div>
       <div><dt>g l</dt><dd>Go lab</dd></div>
+      <div><dt>⌘/Ctrl k</dt><dd>Open command palette</dd></div>
     </dl>
+  </div>
+</div>
+<div class="command-palette" data-command-palette hidden>
+  <div class="command-panel" role="dialog" aria-modal="false" aria-label="Command palette">
+    <button type="button" data-command-close aria-label="Close command palette">×</button>
+    <h2>Command palette</h2>
+    <a data-command-item href="/">Open home feed</a>
+    <a data-command-item href="/search">Open search</a>
+    <a data-command-item href="/lab">Open feed lab</a>
+    <a data-command-item href="/diagnostics">Open provider status</a>
+    <button data-command-item disabled title="Write surface disabled until write-safety gates exist">Compose / Publish disabled</button>
   </div>
 </div>
 <nav class="nav mobile-nav" aria-label="Primary mobile">

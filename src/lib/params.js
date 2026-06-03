@@ -4,6 +4,7 @@ const USERNAME_RE = /^[a-z0-9][a-z0-9._-]{0,31}$/i
 const HEX_CAST_RE = /^(0x)?[a-f0-9]{8,64}$/i
 const DEMO_CAST_RE = /^demo-[a-z0-9-]{3,40}$/i
 const CURSOR_RE = /^[a-z0-9._~:-]{0,240}$/i
+const CHANNEL_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/i
 
 function parseUsername(value) {
   const username = String(value || '').trim().replace(/^@/, '')
@@ -29,6 +30,12 @@ function parseCursor(value) {
   return cursor
 }
 
+function parseChannelId(value) {
+  const channelId = String(value || '').trim().replace(/^\//, '')
+  if (!CHANNEL_RE.test(channelId)) throw new BadRequestError('Invalid Farcaster channel.')
+  return channelId
+}
+
 function parseSearchQuery(value) {
   const query = String(value || '').trim()
   if (!query) return ''
@@ -47,4 +54,4 @@ function parseSearchInput(value) {
   return { displayQuery, query, authorUsername }
 }
 
-module.exports = { parseUsername, parseFid, parseCastHash, parseCursor, parseSearchQuery, parseSearchInput }
+module.exports = { parseUsername, parseFid, parseCastHash, parseCursor, parseChannelId, parseSearchQuery, parseSearchInput }

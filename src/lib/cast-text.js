@@ -4,7 +4,7 @@ const encoder = new TextEncoder()
 const URL_RE = /https?:\/\/[^\s<>'"]+/gi
 
 function buildRichTextSegments({ text = '', annotations = [], hiddenUrls = [] } = {}) {
-  const value = String(text || '')
+  const value = cleanCastText(text)
   const hidden = new Set(hiddenUrls.map(normalizeUrlForCompare).filter(Boolean))
   const ranges = normalizeAnnotations(annotations, value)
   const segments = []
@@ -22,7 +22,7 @@ function buildRichTextSegments({ text = '', annotations = [], hiddenUrls = [] } 
   }
 
   appendLinkifiedText(segments, value.slice(cursor), hidden)
-  return segments
+  return finalizeSegments(segments)
 }
 
 function normalizeAnnotations(annotations, text) {
@@ -65,6 +65,22 @@ function appendSegment(segments, segment) {
     return
   }
   segments.push(segment)
+}
+
+function finalizeSegments(segments) {
+  const cleaned = segments
+    .map((segment) => ({ ...segment, text: cleanCastText(segment.text) }))
+    .filter((segment) => segment.text)
+  const hasLinks = cleaned.some((segment) => segment.href)
+  if (!hasLinks && cleaned.length) {
+    cleaned[0].text = cleaned[0].text.trimStart()
+    cleaned[cleaned.length - 1].text = cleaned[cleaned.length - 1].text.trimEnd()
+  }
+  return cleaned.filter((segment) => segment.text)
+}
+
+function cleanCastText(text) {
+  return String(text || '').replace(/\uFFFC/g, '').replace(/ {2,}/g, ' ')
 }
 
 function byteOffsetToStringIndex(text, offset) {

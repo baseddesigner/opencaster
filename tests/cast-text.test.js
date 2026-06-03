@@ -31,3 +31,12 @@ test('rich text linkifies safe URLs and ignores unsafe annotation hrefs', () => 
   assert.match(segments.at(-1).text, /@bad/)
   assert.equal(segments.some((segment) => segment.href === 'javascript:alert(1)'), false)
 })
+
+test('rich text strips object replacement placeholders and trims hidden embed URLs', () => {
+  const segments = buildRichTextSegments({
+    text: 'photos \uFFFC https://example.com/one.jpg ',
+    hiddenUrls: ['https://example.com/one.jpg']
+  })
+
+  assert.deepEqual(segments, [{ kind: 'text', text: 'photos' }])
+})

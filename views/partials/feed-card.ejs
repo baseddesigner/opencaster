@@ -1,11 +1,27 @@
-<article class="cast-card" data-cast-card data-cast-url="/cast/<%= encodeURIComponent(cast.hash) %>" tabindex="-1">
+<article class="cast-card <%= (typeof displayMode !== 'undefined' && displayMode === 'grid') ? 'compact-card' : '' %>" data-cast-card data-cast-url="/cast/<%= encodeURIComponent(cast.hash) %>" tabindex="-1">
   <%- include('./cast-summary', { cast, showScore: true, showThreadLink: false }) %>
+  <% if (cast.isReply || cast.isRecast) { %>
+    <div class="cast-badges" aria-label="Cast context">
+      <% if (cast.isReply) { %><span class="pill subtle">Reply</span><% } %>
+      <% if (cast.isRecast) { %><span class="pill subtle">Recast</span><% } %>
+    </div>
+  <% } %>
   <% if (cast.whyShown) { %>
     <p class="why-shown"><span>Why shown</span><%= cast.whyShown %></p>
   <% } %>
-  <% if (cast.embeds && cast.embeds.length) { %>
+  <% if (cast.imageEmbeds && cast.imageEmbeds.length) { %>
+    <div class="image-grid count-<%= Math.min(cast.imageEmbeds.length, 4) %>" aria-label="Image embeds">
+      <% cast.imageEmbeds.slice(0, 4).forEach((embed, index) => { %>
+        <a class="image-tile" href="<%= embed.url %>" target="_blank" rel="noopener noreferrer">
+          <% if (embed.imageUrl) { %><img src="<%= embed.imageUrl %>" alt="" loading="lazy"><% } %>
+          <% if (index === 3 && cast.imageEmbeds.length > 4) { %><span class="image-more">+<%= cast.imageEmbeds.length - 4 %></span><% } %>
+        </a>
+      <% }) %>
+    </div>
+  <% } %>
+  <% if (cast.detailEmbeds && cast.detailEmbeds.length) { %>
     <div class="embeds rich-embeds">
-      <% cast.embeds.forEach((embed) => { %>
+      <% cast.detailEmbeds.forEach((embed) => { %>
         <%- include('./embed-card', { embed }) %>
       <% }) %>
     </div>

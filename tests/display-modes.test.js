@@ -1,7 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { normalizeDisplayMode, filterCastsForDisplayMode, displayModeHref } = require('../src/lib/display-modes')
+const { normalizeDisplayMode, filterCastsForDisplayMode, displayModeHref, normalizeFeedControls, filterCastsForFeedControls, feedControlHref } = require('../src/lib/display-modes')
 
 test('display modes normalize unknown values to casts', () => {
   assert.equal(normalizeDisplayMode('media'), 'media')
@@ -25,4 +25,17 @@ test('display modes filter media and frame casts by classified embeds', () => {
 
 test('display mode href preserves existing query state and replaces mode', () => {
   assert.equal(displayModeHref('/feed/builders', { rank: 'recent', cursor: 'abc', mode: 'media' }, 'frames'), '/feed/builders?rank=recent&cursor=abc&mode=frames')
+})
+
+test('feed controls hide replies and recasts while preserving query links', () => {
+  const casts = [
+    { hash: 'root', isReply: false, isRecast: false },
+    { hash: 'reply', isReply: true, isRecast: false },
+    { hash: 'recast', isReply: false, isRecast: true }
+  ]
+  const controls = normalizeFeedControls({ replies: 'hide', recasts: 'hide' })
+
+  assert.deepEqual(filterCastsForFeedControls(casts, controls).map((cast) => cast.hash), ['root'])
+  assert.equal(feedControlHref('/feed/builders', { rank: 'recent', mode: 'media', replies: 'hide' }, 'recasts', 'hide'), '/feed/builders?rank=recent&mode=media&replies=hide&recasts=hide')
+  assert.equal(feedControlHref('/feed/builders', { recasts: 'hide' }, 'recasts', 'show'), '/feed/builders')
 })

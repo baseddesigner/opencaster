@@ -30,7 +30,7 @@
           <a class="text-link" href="/search?q=<%= encodeURIComponent(profile.username) %>&type=casts">Search mentions</a>
         </div>
         <div class="feed-list display-<%= displayMode %>">
-          <% casts.forEach((cast) => { %><%- include('../partials/feed-card', { cast: { ...cast, whyShown: discovery.recentWhy } }) %><% }) %>
+          <% casts.forEach((cast) => { %><%- include('../partials/feed-card', { cast: { ...cast, whyShown: discovery.recentWhy }, displayMode }) %><% }) %>
           <% if (!casts.length) { %><%- include('../partials/empty-state', { message: 'No recent casts loaded for this profile.' }) %><% } %>
         </div>
       </section>

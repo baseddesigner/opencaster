@@ -5,6 +5,8 @@ const DISPLAY_MODES = {
   grid: { label: 'Grid', description: 'Dense card grid for scanning.' }
 }
 
+const FEED_CONTROL_DEFAULTS = { replies: 'show', recasts: 'show' }
+
 function normalizeDisplayMode(mode) {
   return DISPLAY_MODES[mode] ? mode : 'casts'
 }
@@ -16,17 +18,47 @@ function filterCastsForDisplayMode(casts = [], mode = 'casts') {
   return casts
 }
 
+function normalizeFeedControls(query = {}) {
+  return {
+    replies: query.replies === 'hide' ? 'hide' : 'show',
+    recasts: query.recasts === 'hide' ? 'hide' : 'show'
+  }
+}
+
+function filterCastsForFeedControls(casts = [], controls = FEED_CONTROL_DEFAULTS) {
+  return casts.filter((cast) => {
+    if (controls.replies === 'hide' && cast.isReply) return false
+    if (controls.recasts === 'hide' && cast.isRecast) return false
+    return true
+  })
+}
+
 function displayModeHref(pathname, query = {}, targetMode = 'casts') {
+  return buildHref(pathname, { ...query, mode: normalizeDisplayMode(targetMode) })
+}
+
+function feedControlHref(pathname, query = {}, controlName, targetValue) {
+  return buildHref(pathname, { ...query, [controlName]: targetValue })
+}
+
+function buildHref(pathname, query = {}) {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(query)) {
     if (value === undefined || value === null || value === '') continue
-    if (key === 'mode') continue
+    if (key === 'mode' && normalizeDisplayMode(value) === 'casts') continue
+    if ((key === 'replies' || key === 'recasts') && value !== 'hide') continue
     params.set(key, String(value))
   }
-  const mode = normalizeDisplayMode(targetMode)
-  if (mode !== 'casts') params.set('mode', mode)
   const suffix = params.toString()
   return suffix ? `${pathname}?${suffix}` : pathname
 }
 
-module.exports = { DISPLAY_MODES, normalizeDisplayMode, filterCastsForDisplayMode, displayModeHref }
+module.exports = {
+  DISPLAY_MODES,
+  normalizeDisplayMode,
+  filterCastsForDisplayMode,
+  displayModeHref,
+  normalizeFeedControls,
+  filterCastsForFeedControls,
+  feedControlHref
+}
