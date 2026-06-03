@@ -150,6 +150,7 @@ If you find a vulnerability, see [SECURITY.md](SECURITY.md).
 
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — public roadmap for Feed Lab, Provider Platform, and Open Source Readiness.
 - [`docs/GOAL-production-ready-farcaster-client.md`](docs/GOAL-production-ready-farcaster-client.md) — implementation target and acceptance gates.
+- [`docs/GOAL-reference-client-source-reuse.md`](docs/GOAL-reference-client-source-reuse.md) — Max-approved source-reuse goal for deeper Nook/Supercast pattern extraction.
 - [`docs/UI-ITERATIONS.md`](docs/UI-ITERATIONS.md) — visual iterations and UI rubric.
 - [`docs/PRODUCTION-CHECKLIST.md`](docs/PRODUCTION-CHECKLIST.md) — production readiness gates.
 - [`docs/architecture/provider-contract.md`](docs/architecture/provider-contract.md) — provider interface, response shapes, errors, diagnostics, and tests.
