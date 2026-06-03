@@ -154,6 +154,7 @@ If you find a vulnerability, see [SECURITY.md](SECURITY.md).
 - [`docs/PRODUCTION-CHECKLIST.md`](docs/PRODUCTION-CHECKLIST.md) — production readiness gates.
 - [`docs/architecture/provider-contract.md`](docs/architecture/provider-contract.md) — provider interface, response shapes, errors, diagnostics, and tests.
 - [`docs/research/snapchain-cassie-2026-05-27/`](docs/research/snapchain-cassie-2026-05-27/) — Cassie/Hypersnap/Snapchain research.
+- [`docs/research/nook-2026-06-03.md`](docs/research/nook-2026-06-03.md) — lessons from Nook's Farcaster client architecture and UX.
 
 ## Contributing
 
