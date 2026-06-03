@@ -116,6 +116,31 @@ Later:
 - Add visual QA artifacts for critical pages.
 - Add a public contributor dashboard once issue volume justifies it.
 
+## Track 4: Reference Client Extraction
+
+Goal: extract the best proven Farcaster-client UX patterns from Nook and Supercast without inheriting their code, licensing ambiguity, or write-surface risk.
+
+Current foundation:
+
+- Nook and Supercast are forked under `clawlinker` and cloned locally for reference.
+- Nook research documents frontend/client UX patterns: rich cast cards, display modes, embed handling, custom actions, lists, notifications, profile/channel headers.
+- Supercast research documents draft-first scheduling, composer workbench UX, keyboard shortcuts, multi-account/auth lessons, and monetization/product systems.
+- Combined extraction plan lives at `docs/research/client-reference-extraction-2026-06-03.md`.
+
+Near-term work:
+
+- Implement Nook-inspired cast text rendering with UTF-8 byte-offset-safe mentions/channels.
+- Add a central embed view model and richer static embed cards.
+- Add read-only media/frame/grid display modes.
+- Add Supercast-inspired keyboard navigation and shortcut help.
+- Add Supercast-inspired search parsing for `from:username`.
+
+Later:
+
+- Design a write-safety gate before any posting/scheduling work: auth, managed signers, scoped account access, CSRF, idempotency, audit logs, scheduler locks, retries, and receipts.
+- Build draft-first scheduling only after that safety layer is explicit and approved.
+- Treat custom actions and scheduled reactions as future power-user features, not early public surface.
+
 ## Operating Rules
 
 - Stay read-only until the product has earned a write surface.
